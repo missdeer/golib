@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Mobi generate files that used to make a mobi file by kindlegen
 type Mobi struct {
 	title      string
 	uid        int64
@@ -154,6 +155,7 @@ var (
 	`
 )
 
+// Begin prepare book environment
 func (m *Mobi) Begin() {
 	var err error
 	m.tocTmp, err = os.OpenFile(`toc.tmp`, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
@@ -173,6 +175,7 @@ func (m *Mobi) Begin() {
 	}
 }
 
+// End generate files that kindlegen needs
 func (m *Mobi) End() {
 	m.tocTmp.Close()
 	m.contentTmp.Close()
@@ -187,6 +190,7 @@ func (m *Mobi) End() {
 	os.Remove(`nav.tmp`)
 }
 
+// AppendContent append book content
 func (m *Mobi) AppendContent(articleTitle, articleURL, articleContent string) {
 	m.tocTmp.WriteString(fmt.Sprintf(`<li><a href="#article_%d">%s</a></li>`, m.count, articleTitle))
 	m.contentTmp.WriteString(fmt.Sprintf(`<div id="article_%d" class="article"><h2 class="do_article_title"><a href="%s">%s</a></h2><div><p>%s</p></div></div>`,
@@ -197,6 +201,7 @@ func (m *Mobi) AppendContent(articleTitle, articleURL, articleContent string) {
 	m.count++
 }
 
+// SetTitle set book title
 func (m *Mobi) SetTitle(title string) {
 	m.title = title
 }
