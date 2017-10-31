@@ -1,4 +1,4 @@
-// Package semaphore privode a semaphore implementation
+// Package semaphore provide a semaphore implementation
 package semaphore
 
 // Semaphore represent a semaphore object
