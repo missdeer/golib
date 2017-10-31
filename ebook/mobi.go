@@ -189,20 +189,10 @@ func (m *Mobi) End() {
 
 func (m *Mobi) AppendContent(articleTitle, articleURL, articleContent string) {
 	m.tocTmp.WriteString(fmt.Sprintf(`<li><a href="#article_%d">%s</a></li>`, m.count, articleTitle))
-	m.contentTmp.WriteString(fmt.Sprintf(`<div id="article_%d" class="article">
-		<h2 class="do_article_title">				  
-		  <a href="%s">%s</a>				  
-		</h2>				
-		<div>
-		<p>%s</p>
-		</div>
-		</div>`, m.count, articleURL, articleTitle, articleContent))
-	m.navTmp.WriteString(fmt.Sprintf(`
-		<navPoint class="chapter" id="%d" playOrder="1">
-			<navLabel><text>%s</text></navLabel>
-			<content src="content.html#article_%d" />
-		</navPoint>
-		`, m.count, articleTitle, m.count))
+	m.contentTmp.WriteString(fmt.Sprintf(`<div id="article_%d" class="article"><h2 class="do_article_title"><a href="%s">%s</a></h2><div><p>%s</p></div></div>`,
+		m.count, articleURL, articleTitle, articleContent))
+	m.navTmp.WriteString(fmt.Sprintf(`<navPoint class="chapter" id="%d" playOrder="1"><navLabel><text>%s</text></navLabel><content src="content.html#article_%d" /></navPoint>`,
+		m.count, articleTitle, m.count))
 
 	m.count++
 }
