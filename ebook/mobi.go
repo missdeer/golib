@@ -1,3 +1,5 @@
+// Package ebook generate ebook files such as .mobi or it's input
+// currently only mobi is supported
 package ebook
 
 import (

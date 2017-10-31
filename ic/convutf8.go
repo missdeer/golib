@@ -1,3 +1,4 @@
+// Package ic convert text between CJK and UTF-8 in pure Go way
 package ic
 
 import (

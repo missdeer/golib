@@ -2,6 +2,7 @@ package ic
 
 import "log"
 
+// Convert convert bytes from CJK or UTF-8 to UTF-8 or CJK
 func Convert(from string, to string, src []byte) []byte {
 	if to == "utf-8" {
 		out, e := ToUTF8(from, src)
@@ -24,6 +25,7 @@ func Convert(from string, to string, src []byte) []byte {
 	return src
 }
 
+// ConvertString convert string from CJK or UTF-8 to UTF-8 or CJK
 func ConvertString(from string, to string, src string) string {
 	return string(Convert(from, to, []byte(src)))
 }
