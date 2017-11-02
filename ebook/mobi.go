@@ -24,7 +24,7 @@ var (
 	contentHTMLTemplate = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 	<html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 		<title>%s</title>
 		<style type="text/css">
 		@font-face{
@@ -36,13 +36,13 @@ var (
 			font-size: 1.2em;
 			margin:0 5px;
 		}
-	
+
 		h1{
 			font-family: "CustomFont";
 			font-size:4em;
 			font-weight:bold;
 		}
-	
+
 		h2 {
 			font-family: "CustomFont";
 			font-size: 1.2em;
@@ -91,17 +91,17 @@ var (
 	<a href="#content">跳到第一篇</a><br />%s
 	</div>
 	<div id="toc">
-	<h2>目录</h2> 
-	<ol> 
+	<h2>目录</h2>
+	<ol>
 		%s
 	</ol>
 	</div>
 	<mbp:pagebreak></mbp:pagebreak>
-	<div id="content">	
+	<div id="content">
 	<div id="section_1" class="section">
 		%s
 	</div>
-	</div">
+	</div>
 	</body>
 	</html>`
 
@@ -115,12 +115,12 @@ var (
 	</head>
 	<docTitle><text>%s</text></docTitle>
 	<docAuthor><text>类库大魔王</text></docAuthor>
-	<navMap>		
+	<navMap>
 		<navPoint class="book">
 			<navLabel><text>%s</text></navLabel>
 			<content src="content.html" />
-			%s        
-		</navPoint>			
+			%s
+		</navPoint>
 	</navMap>
 	</ncx>`
 
@@ -137,17 +137,17 @@ var (
 		<dc:date>%s</dc:date>
 		<dc:description></dc:description>
 	</dc-metadata>
-	
+
 	</metadata>
 	<manifest>
 		<item id="content" media-type="application/xhtml+xml" href="content.html"></item>
 		<item id="toc" media-type="application/x-dtbncx+xml" href="toc.ncx"></item>
 	</manifest>
-	
+
 	<spine toc="toc">
 		<itemref idref="content"/>
 	</spine>
-	
+
 	<guide>
 		<reference type="start" title="start" href="content.html#content"></reference>
 		<reference type="toc" title="toc" href="content.html#toc"></reference>
