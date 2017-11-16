@@ -131,8 +131,8 @@ var (
 		<dc:title>%s</dc:title>
 		<dc:language>zh-CN</dc:language>
 		<dc:identifier id="uid">%d%s</dc:identifier>
-		<dc:creator>GetNovel</dc:creator>
-		<dc:publisher>类库大魔王</dc:publisher>
+		<dc:creator>类库大魔王制作</dc:creator>
+		<dc:publisher>类库大魔王发布</dc:publisher>
 		<dc:subject>%s</dc:subject>
 		<dc:date>%s</dc:date>
 		<dc:description></dc:description>
