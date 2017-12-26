@@ -37,7 +37,7 @@ doRequest:
 
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.Println("response not 200")
+		log.Println("response not 200:", resp.StatusCode, resp.Status)
 		retry++
 		if retry < retryCount {
 			time.Sleep(3 * time.Second)
