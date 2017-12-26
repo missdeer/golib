@@ -15,7 +15,7 @@ const (
 	w               = 595.28
 	h               = 841.89
 	titleFontSize   = 24
-	contentFontSize = 16
+	contentFontSize = 18
 )
 
 var (
@@ -65,10 +65,14 @@ func (m *Pdf) End() {
 
 // AppendContent append book content
 func (m *Pdf) AppendContent(articleTitle, articleURL, articleContent string) {
+	if m.height+titleFontSize+2 > maxH {
+		m.pdf.AddPage()
+		m.height = 0
+	}
 	m.pdf.SetFont(`CustomFont`, "", titleFontSize)
 	m.pdf.Cell(nil, articleTitle)
-	m.pdf.Br(titleFontSize)
-	m.height += titleFontSize
+	m.pdf.Br(titleFontSize + 2)
+	m.height += titleFontSize + 2
 	m.pdf.SetFont(`CustomFont`, "", contentFontSize)
 
 	for pos := strings.Index(articleContent, "</p><p>"); ; pos = strings.Index(articleContent, "</p><p>") {
@@ -82,8 +86,6 @@ func (m *Pdf) AppendContent(articleTitle, articleURL, articleContent string) {
 		m.writeText(t)
 		articleContent = articleContent[pos+7:]
 	}
-	m.pdf.AddPage()
-	m.height = 0
 }
 
 // SetTitle set book title
@@ -102,28 +104,28 @@ func (m *Pdf) writeText(t string) {
 		}
 		count += length
 		if width, _ := m.pdf.MeasureTextWidth(t[:count]); width > maxW {
-			count -= length
-			m.pdf.Cell(nil, t[:count])
-			m.pdf.Br(contentFontSize)
-			m.height += contentFontSize
-			t = t[count:]
-			index = 0
-			count = 0
-			if m.height > maxH {
+			if m.height+contentFontSize+2 > maxH {
 				m.pdf.AddPage()
 				m.height = 0
 			}
+			count -= length
+			m.pdf.Cell(nil, t[:count])
+			m.pdf.Br(contentFontSize + 2)
+			m.height += contentFontSize + 2
+			t = t[count:]
+			index = 0
+			count = 0
 		} else {
 			index += length
 		}
 	}
 	if len(t) > 0 {
-		m.pdf.Cell(nil, t)
-		m.pdf.Br(contentFontSize)
-		m.height += contentFontSize
-		if m.height > maxH {
+		if m.height+contentFontSize+2 > maxH {
 			m.pdf.AddPage()
 			m.height = 0
 		}
+		m.pdf.Cell(nil, t)
+		m.pdf.Br(contentFontSize + 2)
+		m.height += contentFontSize + 2
 	}
 }
