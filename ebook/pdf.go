@@ -2,11 +2,12 @@ package ebook
 
 import (
 	"fmt"
-	"github.com/signintech/gopdf"
 	"log"
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/signintech/gopdf"
 )
 
 const (
