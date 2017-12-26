@@ -1,6 +1,7 @@
 package ebook
 
 import (
+	"fmt"
 	"github.com/signintech/gopdf"
 	"log"
 	"strings"
@@ -22,6 +23,11 @@ type Pdf struct {
 	title  string
 	height int
 	pdf    *gopdf.GoPdf
+}
+
+// Info output self information
+func (m *Pdf) Info() {
+	fmt.Println("generating PDF file for Kindle DXG...")
 }
 
 // Begin prepare book environment

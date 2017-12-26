@@ -157,6 +157,11 @@ var (
 	`
 )
 
+// Info output self information
+func (m *Mobi) Info() {
+	fmt.Println("generating source files for mobi file, please run kindlegen to generate mobi file after this application exits...")
+}
+
 // Begin prepare book environment
 func (m *Mobi) Begin() {
 	var err error
