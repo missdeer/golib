@@ -10,18 +10,23 @@ import (
 )
 
 const (
+	//595.28, 841.89 = A4
 	w               = 595.28
 	h               = 841.89
-	maxW            = 580
-	maxH            = 810
 	titleFontSize   = 24
 	contentFontSize = 16
+)
+
+var (
+	// for 10 points top/left/bottom/right margins, A4
+	maxW = 575.28
+	maxH = 821.89
 )
 
 // Pdf generate PDF file
 type Pdf struct {
 	title  string
-	height int
+	height float64
 	pdf    *gopdf.GoPdf
 }
 
@@ -33,13 +38,15 @@ func (m *Pdf) Info() {
 // Begin prepare book environment
 func (m *Pdf) Begin() {
 	m.pdf = &gopdf.GoPdf{}
-	m.pdf.Start(gopdf.Config{PageSize: gopdf.Rect{W: w, H: h}}) //595.28, 841.89 = A4
+	m.pdf.Start(gopdf.Config{PageSize: gopdf.Rect{W: w, H: h}})
 	m.pdf.AddPage()
 	err := m.pdf.AddTTFFont(`CustomFont`, "fonts/CustomFont.ttf")
 	if err != nil {
 		log.Print(err.Error())
 		return
 	}
+	maxW = w - m.pdf.GetX()*2
+	maxH = h - m.pdf.GetY()*2
 }
 
 // End generate files that kindlegen needs
