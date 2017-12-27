@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -28,8 +29,8 @@ var (
 		<title>%s</title>
 		<style type="text/css">
 		@font-face{
-			font-family: "CustomFont";
-			src: url(fonts/CustomFont.ttf);
+			font-family: "%CustomFont%";
+			src: url(%CustomFontFile%);
 		}
 		body{
 			font-family: "CustomFont";
@@ -175,6 +176,16 @@ func (m *Mobi) SetPageType(pageType string) {
 // SetFontSize dummy funciton for interface
 func (m *Mobi) SetFontSize(titleFontSize int, contentFontSize int) {
 
+}
+
+// SetFontFamily set custom font family
+func (m *Mobi) SetFontFamily(family string) {
+	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFont%", family, -1)
+}
+
+// SetFontFile set custom font file
+func (m *Mobi) SetFontFile(file string) {
+	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFontFile%", file, -1)
 }
 
 // Begin prepare book environment

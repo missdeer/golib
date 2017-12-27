@@ -24,11 +24,23 @@ type Pdf struct {
 	maxH            float64
 	titleFontSize   float64
 	contentFontSize float64
+	fontFamily      string
+	fontFile        string
 }
 
 // Info output self information
 func (m *Pdf) Info() {
 	fmt.Println("generating PDF file...")
+}
+
+// SetFontFamily set custom font family
+func (m *Pdf) SetFontFamily(family string) {
+	m.fontFamily = family
+}
+
+// SetFontFile set custom font file
+func (m *Pdf) SetFontFile(file string) {
+	m.fontFile = file
 }
 
 // SetMargins dummy funciton for interface
@@ -111,10 +123,12 @@ func (m *Pdf) Begin() {
 	m.pdf.SetLeftMargin(m.leftMargin)
 	m.pdf.SetTopMargin(m.topMargin)
 	m.pdf.AddPage()
-	err := m.pdf.AddTTFFont(`CustomFont`, "fonts/CustomFont.ttf")
-	if err != nil {
-		log.Print(err.Error())
-		return
+	if m.fontFile != "" {
+		err := m.pdf.AddTTFFont(m.fontFamily, m.fontFile)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 	}
 }
 
@@ -137,11 +151,11 @@ func (m *Pdf) AppendContent(articleTitle, articleURL, articleContent string) {
 		m.pdf.AddPage()
 		m.height = 0
 	}
-	m.pdf.SetFont(`CustomFont`, "", int(m.titleFontSize))
+	m.pdf.SetFont(m.fontFamily, "", int(m.titleFontSize))
 	m.pdf.Cell(nil, articleTitle)
 	m.pdf.Br(m.titleFontSize * 1.1)
 	m.height += m.titleFontSize * 1.1
-	m.pdf.SetFont(`CustomFont`, "", int(m.contentFontSize))
+	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize))
 
 	for pos := strings.Index(articleContent, "</p><p>"); ; pos = strings.Index(articleContent, "</p><p>") {
 		if pos <= 0 {

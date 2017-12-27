@@ -10,4 +10,6 @@ type IBook interface {
 	SetMargins(float64, float64)
 	SetPageType(string)
 	SetFontSize(int, int)
+	SetFontFamily(string)
+	SetFontFile(string)
 }
