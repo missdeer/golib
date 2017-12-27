@@ -188,6 +188,11 @@ func (m *Mobi) SetFontFile(file string) {
 	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFontFile%", file, -1)
 }
 
+// SetLineSpacing dummy funciton for interface
+func (m *Mobi) SetLineSpacing(float64) {
+
+}
+
 // Begin prepare book environment
 func (m *Mobi) Begin() {
 	var err error

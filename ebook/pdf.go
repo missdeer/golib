@@ -24,6 +24,7 @@ type Pdf struct {
 	maxH            float64
 	titleFontSize   float64
 	contentFontSize float64
+	lineSpacing     float64
 	fontFamily      string
 	fontFile        string
 }
@@ -31,6 +32,11 @@ type Pdf struct {
 // Info output self information
 func (m *Pdf) Info() {
 	fmt.Println("generating PDF file...")
+}
+
+// SetLineSpacing dummy funciton for interface
+func (m *Pdf) SetLineSpacing(lineSpacing float64) {
+	m.lineSpacing = lineSpacing
 }
 
 // SetFontFamily set custom font family
@@ -100,8 +106,11 @@ func (m *Pdf) SetPageType(pageType string) {
 	case "6inch":
 		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 255.12, H: 331.65}} // 90 mm x 117 mm
 	case "7inch":
+		// FIXME
 		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 297.64, H: 386.93}}
 	default:
+		// work as A4 paper size
+		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
 	}
 	m.w = m.config.PageSize.W
 	m.h = m.config.PageSize.H
@@ -152,8 +161,8 @@ func (m *Pdf) AppendContent(articleTitle, articleURL, articleContent string) {
 	}
 	m.pdf.SetFont(m.fontFamily, "", int(m.titleFontSize))
 	m.pdf.Cell(nil, articleTitle)
-	m.pdf.Br(m.titleFontSize * 1.1)
-	m.height += m.titleFontSize * 1.1
+	m.pdf.Br(m.titleFontSize * m.lineSpacing)
+	m.height += m.titleFontSize * m.lineSpacing
 	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize))
 
 	for pos := strings.Index(articleContent, "</p><p>"); ; pos = strings.Index(articleContent, "</p><p>") {
@@ -191,8 +200,8 @@ func (m *Pdf) writeText(t string) {
 			}
 			count -= length
 			m.pdf.Cell(nil, t[:count])
-			m.pdf.Br(m.contentFontSize * 1.1)
-			m.height += m.contentFontSize * 1.1
+			m.pdf.Br(m.contentFontSize * m.lineSpacing)
+			m.height += m.contentFontSize * m.lineSpacing
 			t = t[count:]
 			index = 0
 			count = 0
@@ -206,7 +215,7 @@ func (m *Pdf) writeText(t string) {
 			m.height = 0
 		}
 		m.pdf.Cell(nil, t)
-		m.pdf.Br(m.contentFontSize * 1.1)
-		m.height += m.contentFontSize * 1.1
+		m.pdf.Br(m.contentFontSize * m.lineSpacing)
+		m.height += m.contentFontSize * m.lineSpacing
 	}
 }
