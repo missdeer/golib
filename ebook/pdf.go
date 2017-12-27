@@ -100,8 +100,7 @@ func (m *Pdf) SetPageType(pageType string) {
 	case "6inch":
 		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 255.12, H: 331.65}} // 90 mm x 117 mm
 	case "7inch":
-		// FIXME
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 841, H: 1189}}
+		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 297.64, H: 386.93}}
 	default:
 	}
 	m.w = m.config.PageSize.W
