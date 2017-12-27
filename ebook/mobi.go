@@ -131,8 +131,8 @@ var (
 		<dc:title>%s</dc:title>
 		<dc:language>zh-CN</dc:language>
 		<dc:identifier id="uid">%d%s</dc:identifier>
-		<dc:creator>类库大魔王制作</dc:creator>
-		<dc:publisher>类库大魔王发布</dc:publisher>
+		<dc:creator>类库大魔王制作，仅限个人私下使用，禁止传播，谢绝跨省、查水表、送外卖、请喝茶等各种粉饰的暴力活动</dc:creator>
+		<dc:publisher>类库大魔王发布，仅限个人私下使用，禁止传播，谢绝跨省、查水表、送外卖、请喝茶等各种粉饰的暴力活动</dc:publisher>
 		<dc:subject>%s</dc:subject>
 		<dc:date>%s</dc:date>
 		<dc:description></dc:description>
@@ -160,6 +160,21 @@ var (
 // Info output self information
 func (m *Mobi) Info() {
 	fmt.Println("generating source files for mobi file, please run kindlegen to generate mobi file after this application exits...")
+}
+
+// SetMargins dummy funciton for interface
+func (m *Mobi) SetMargins(left float64, top float64) {
+
+}
+
+// SetPageType dummy funciton for interface
+func (m *Mobi) SetPageType(pageType string) {
+
+}
+
+// SetFontSize dummy funciton for interface
+func (m *Mobi) SetFontSize(titleFontSize int, contentFontSize int) {
+
 }
 
 // Begin prepare book environment
