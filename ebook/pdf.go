@@ -122,10 +122,10 @@ func (m *Pdf) Begin() {
 func (m *Pdf) End() {
 	m.pdf.SetInfo(gopdf.PdfInfo{
 		Title:        m.title,
-		Author:       `类库大魔王制作，仅限个人私下使用，禁止传播，谢绝跨省、查水表、送外卖、请喝茶等各种粉饰的暴力活动`,
-		Creator:      `类库大魔王开发的GetNovel，仅限个人私下使用，禁止传播，谢绝跨省、查水表、送外卖、请喝茶等各种粉饰的暴力活动`,
-		Producer:     `GetNovel，仅限个人私下使用，禁止传播，谢绝跨省、查水表、送外卖、请喝茶等各种粉饰的暴力活动`,
-		Subject:      `不费脑子的适合电子书设备（如Kindle DXG）看的网络小说`,
+		Author:       `GetNovel用户制作成PDF，并非小说原作者`,
+		Creator:      `GetNovel，仅限个人研究学习，对其造成的所有后果，软件作者不负任何责任`,
+		Producer:     `GetNovel，仅限个人研究学习，对其造成的所有后果，软件作者不负任何责任`,
+		Subject:      m.title + `：不费脑子的适合电子书设备（如Kindle DXG）看的网络小说`,
 		CreationDate: time.Now(),
 	})
 	m.pdf.WritePdf(m.title + ".pdf")

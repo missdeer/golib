@@ -131,8 +131,8 @@ var (
 		<dc:title>%s</dc:title>
 		<dc:language>zh-CN</dc:language>
 		<dc:identifier id="uid">%d%s</dc:identifier>
-		<dc:creator>类库大魔王制作，仅限个人私下使用，禁止传播，谢绝跨省、查水表、送外卖、请喝茶等各种粉饰的暴力活动</dc:creator>
-		<dc:publisher>类库大魔王发布，仅限个人私下使用，禁止传播，谢绝跨省、查水表、送外卖、请喝茶等各种粉饰的暴力活动</dc:publisher>
+		<dc:creator>GetNovel用户制作</dc:creator>
+		<dc:publisher>GetNovel，仅限个人研究学习，对其造成的任何后果，软件作者不负任何责任</dc:publisher>
 		<dc:subject>%s</dc:subject>
 		<dc:date>%s</dc:date>
 		<dc:description></dc:description>
