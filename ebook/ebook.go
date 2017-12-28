@@ -14,3 +14,16 @@ type IBook interface {
 	SetFontFamily(string)
 	SetFontFile(string)
 }
+
+func NewBook(bookType string) IBook {
+	switch bookType {
+	case "pdf":
+		return &pdfBook{}
+	case "mobi":
+		return &mobiBook{}
+	case "epub":
+		return &epubBook{}
+	default:
+		return nil
+	}
+}

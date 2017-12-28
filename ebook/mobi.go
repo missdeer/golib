@@ -12,7 +12,7 @@ import (
 )
 
 // Mobi generate files that used to make a mobi file by kindlegen
-type Mobi struct {
+type mobiBook struct {
 	title      string
 	uid        int64
 	count      int
@@ -159,42 +159,42 @@ var (
 )
 
 // Info output self information
-func (m *Mobi) Info() {
+func (m *mobiBook) Info() {
 	fmt.Println("generating source files for mobi file, please run kindlegen to generate mobi file after this application exits...")
 }
 
 // SetMargins dummy funciton for interface
-func (m *Mobi) SetMargins(left float64, top float64) {
+func (m *mobiBook) SetMargins(left float64, top float64) {
 
 }
 
 // SetPageType dummy funciton for interface
-func (m *Mobi) SetPageType(pageType string) {
+func (m *mobiBook) SetPageType(pageType string) {
 
 }
 
 // SetFontSize dummy funciton for interface
-func (m *Mobi) SetFontSize(titleFontSize int, contentFontSize int) {
+func (m *mobiBook) SetFontSize(titleFontSize int, contentFontSize int) {
 
 }
 
 // SetFontFamily set custom font family
-func (m *Mobi) SetFontFamily(family string) {
+func (m *mobiBook) SetFontFamily(family string) {
 	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFont%", family, -1)
 }
 
 // SetFontFile set custom font file
-func (m *Mobi) SetFontFile(file string) {
+func (m *mobiBook) SetFontFile(file string) {
 	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFontFile%", file, -1)
 }
 
 // SetLineSpacing dummy funciton for interface
-func (m *Mobi) SetLineSpacing(float64) {
+func (m *mobiBook) SetLineSpacing(float64) {
 
 }
 
 // Begin prepare book environment
-func (m *Mobi) Begin() {
+func (m *mobiBook) Begin() {
 	var err error
 	m.tocTmp, err = os.OpenFile(`toc.tmp`, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
@@ -214,7 +214,7 @@ func (m *Mobi) Begin() {
 }
 
 // End generate files that kindlegen needs
-func (m *Mobi) End() {
+func (m *mobiBook) End() {
 	m.tocTmp.Close()
 	m.contentTmp.Close()
 	m.navTmp.Close()
@@ -226,10 +226,12 @@ func (m *Mobi) End() {
 	os.Remove(`toc.tmp`)
 	os.Remove(`content.tmp`)
 	os.Remove(`nav.tmp`)
+	fmt.Println(`You need to run kindlegen utility to generate the final mobi file.`)
+	fmt.Println(`For example: kindlegen -c2 -o xxxx.mobi content.opf`)
 }
 
 // AppendContent append book content
-func (m *Mobi) AppendContent(articleTitle, articleURL, articleContent string) {
+func (m *mobiBook) AppendContent(articleTitle, articleURL, articleContent string) {
 	m.tocTmp.WriteString(fmt.Sprintf(`<li><a href="#article_%d">%s</a></li>`, m.count, articleTitle))
 	m.contentTmp.WriteString(fmt.Sprintf(`<div id="article_%d" class="article"><h2 class="do_article_title"><a href="%s">%s</a></h2><div><p>%s</p></div></div>`,
 		m.count, articleURL, articleTitle, articleContent))
@@ -240,11 +242,11 @@ func (m *Mobi) AppendContent(articleTitle, articleURL, articleContent string) {
 }
 
 // SetTitle set book title
-func (m *Mobi) SetTitle(title string) {
+func (m *mobiBook) SetTitle(title string) {
 	m.title = title
 }
 
-func (m *Mobi) writeContentHTML() {
+func (m *mobiBook) writeContentHTML() {
 	contentHTML, err := os.OpenFile(`content.html`, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Println("opening file content.html for writing failed ", err)
@@ -280,7 +282,7 @@ func (m *Mobi) writeContentHTML() {
 	contentTmp.Close()
 }
 
-func (m *Mobi) writeContentOPF() {
+func (m *mobiBook) writeContentOPF() {
 	contentOPF, err := os.OpenFile("content.opf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Println("opening file content.opf for writing failed ", err)
@@ -291,7 +293,7 @@ func (m *Mobi) writeContentOPF() {
 	contentOPF.Close()
 }
 
-func (m *Mobi) writeTocNCX() {
+func (m *mobiBook) writeTocNCX() {
 	tocNCX, err := os.OpenFile("toc.ncx", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Println("opening file toc.ncx for writing failed ", err)

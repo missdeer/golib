@@ -11,7 +11,7 @@ import (
 )
 
 // Pdf generate PDF file
-type Pdf struct {
+type pdfBook struct {
 	title           string
 	height          float64
 	pdf             *gopdf.GoPdf
@@ -30,27 +30,27 @@ type Pdf struct {
 }
 
 // Info output self information
-func (m *Pdf) Info() {
+func (m *pdfBook) Info() {
 	fmt.Println("generating PDF file...")
 }
 
 // SetLineSpacing dummy funciton for interface
-func (m *Pdf) SetLineSpacing(lineSpacing float64) {
+func (m *pdfBook) SetLineSpacing(lineSpacing float64) {
 	m.lineSpacing = lineSpacing
 }
 
 // SetFontFamily set custom font family
-func (m *Pdf) SetFontFamily(family string) {
+func (m *pdfBook) SetFontFamily(family string) {
 	m.fontFamily = family
 }
 
 // SetFontFile set custom font file
-func (m *Pdf) SetFontFile(file string) {
+func (m *pdfBook) SetFontFile(file string) {
 	m.fontFile = file
 }
 
 // SetMargins dummy funciton for interface
-func (m *Pdf) SetMargins(left float64, top float64) {
+func (m *pdfBook) SetMargins(left float64, top float64) {
 	m.leftMargin = left
 	m.topMargin = top
 	m.maxW = m.w - m.leftMargin*2
@@ -58,7 +58,7 @@ func (m *Pdf) SetMargins(left float64, top float64) {
 }
 
 // SetPageType dummy funciton for interface
-func (m *Pdf) SetPageType(pageType string) {
+func (m *pdfBook) SetPageType(pageType string) {
 	// https://www.cl.cam.ac.uk/~mgk25/iso-paper-ps.txt
 	switch pageType {
 	case "a0":
@@ -119,13 +119,13 @@ func (m *Pdf) SetPageType(pageType string) {
 }
 
 // SetFontSize dummy funciton for interface
-func (m *Pdf) SetFontSize(titleFontSize int, contentFontSize int) {
+func (m *pdfBook) SetFontSize(titleFontSize int, contentFontSize int) {
 	m.titleFontSize = float64(titleFontSize)
 	m.contentFontSize = float64(contentFontSize)
 }
 
 // Begin prepare book environment
-func (m *Pdf) Begin() {
+func (m *pdfBook) Begin() {
 	m.pdf = &gopdf.GoPdf{}
 	m.pdf.Start(*m.config)
 	m.pdf.SetLeftMargin(m.leftMargin)
@@ -141,7 +141,7 @@ func (m *Pdf) Begin() {
 }
 
 // End generate files that kindlegen needs
-func (m *Pdf) End() {
+func (m *pdfBook) End() {
 	m.pdf.SetInfo(gopdf.PdfInfo{
 		Title:        m.title,
 		Author:       `GetNovel用户制作成PDF，并非小说原作者`,
@@ -154,7 +154,7 @@ func (m *Pdf) End() {
 }
 
 // AppendContent append book content
-func (m *Pdf) AppendContent(articleTitle, articleURL, articleContent string) {
+func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string) {
 	if m.height+m.titleFontSize+2 > m.maxH {
 		m.pdf.AddPage()
 		m.height = 0
@@ -179,11 +179,11 @@ func (m *Pdf) AppendContent(articleTitle, articleURL, articleContent string) {
 }
 
 // SetTitle set book title
-func (m *Pdf) SetTitle(title string) {
+func (m *pdfBook) SetTitle(title string) {
 	m.title = title
 }
 
-func (m *Pdf) writeText(t string) {
+func (m *pdfBook) writeText(t string) {
 	t = `　　` + t
 	count := 0
 	index := 0
