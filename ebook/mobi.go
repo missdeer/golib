@@ -163,6 +163,11 @@ func (m *mobiBook) Info() {
 	fmt.Println("generating source files for mobi file, please run kindlegen to generate mobi file after this application exits...")
 }
 
+// PagesPerFile dummy funciton for interface
+func (m *mobiBook) PagesPerFile(int) {
+
+}
+
 // SetMargins dummy funciton for interface
 func (m *mobiBook) SetMargins(left float64, top float64) {
 

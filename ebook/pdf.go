@@ -3,11 +3,13 @@ package ebook
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 	"unicode/utf8"
 
 	"github.com/signintech/gopdf"
+	pdf "github.com/unidoc/unidoc/pdf/model"
 )
 
 // Pdf generate PDF file
@@ -27,6 +29,7 @@ type pdfBook struct {
 	lineSpacing     float64
 	fontFamily      string
 	fontFile        string
+	pagesPerFile    int
 }
 
 // Info output self information
@@ -34,7 +37,12 @@ func (m *pdfBook) Info() {
 	fmt.Println("generating PDF file...")
 }
 
-// SetLineSpacing dummy funciton for interface
+// PagesPerFile how many smaller PDF files are expected to be generated
+func (m *pdfBook) PagesPerFile(n int) {
+	m.pagesPerFile = n
+}
+
+// SetLineSpacing set document line spacing
 func (m *pdfBook) SetLineSpacing(lineSpacing float64) {
 	m.lineSpacing = lineSpacing
 }
@@ -131,6 +139,7 @@ func (m *pdfBook) Begin() {
 	m.pdf.SetLeftMargin(m.leftMargin)
 	m.pdf.SetTopMargin(m.topMargin)
 	m.pdf.AddPage()
+
 	if m.fontFile != "" {
 		err := m.pdf.AddTTFFont(m.fontFamily, m.fontFile)
 		if err != nil {
@@ -151,12 +160,70 @@ func (m *pdfBook) End() {
 		CreationDate: time.Now(),
 	})
 	m.pdf.WritePdf(m.title + ".pdf")
+	if m.pagesPerFile > 0 {
+		inputPath := m.title + ".pdf"
+
+		f, err := os.Open(inputPath)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		defer f.Close()
+
+		pdfReader, err := pdf.NewPdfReader(f)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		numPages, err := pdfReader.GetNumPages()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		startPage := 1
+		for index := 1; startPage < numPages; index++ {
+			endPage := startPage + m.pagesPerFile - 1
+			if endPage > numPages {
+				endPage = numPages
+			}
+			outputPath := fmt.Sprintf("%s(%d).pdf", m.title, index)
+
+			pdfWriter := pdf.NewPdfWriter()
+			for i := startPage; i <= endPage; i++ {
+				pageNum := i
+
+				page, err := pdfReader.GetPage(pageNum)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				err = pdfWriter.AddPage(page)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+
+			fWrite, err := os.Create(outputPath)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			err = pdfWriter.Write(fWrite)
+			if err != nil {
+				fmt.Println(err)
+			}
+			fWrite.Close()
+			startPage = endPage + 1
+		}
+		os.Remove(m.title + ".pdf")
+	}
 }
 
 // AppendContent append book content
 func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string) {
 	if m.height+m.titleFontSize+2 > m.maxH {
 		m.pdf.AddPage()
+
 		m.height = 0
 	}
 	m.pdf.SetFont(m.fontFamily, "", int(m.titleFontSize))
@@ -196,6 +263,7 @@ func (m *pdfBook) writeText(t string) {
 		if width, _ := m.pdf.MeasureTextWidth(t[:count]); width > m.maxW {
 			if m.height+m.contentFontSize+2 > m.maxH {
 				m.pdf.AddPage()
+
 				m.height = 0
 			}
 			count -= length
@@ -212,6 +280,7 @@ func (m *pdfBook) writeText(t string) {
 	if len(t) > 0 {
 		if m.height+m.contentFontSize+2 > m.maxH {
 			m.pdf.AddPage()
+
 			m.height = 0
 		}
 		m.pdf.Cell(nil, t)

@@ -75,6 +75,11 @@ type epubBook struct {
 	fontFile string
 }
 
+// PagesPerFile dummy funciton for interface
+func (m *epubBook) PagesPerFile(int) {
+
+}
+
 // Info output self information
 func (m *epubBook) Info() {
 	fmt.Println("generating epub file...")

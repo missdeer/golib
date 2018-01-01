@@ -13,6 +13,7 @@ type IBook interface {
 	SetLineSpacing(float64)
 	SetFontFamily(string)
 	SetFontFile(string)
+	PagesPerFile(int)
 }
 
 func NewBook(bookType string) IBook {
