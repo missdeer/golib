@@ -3,11 +3,13 @@ package ebook
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 	"unicode/utf8"
 
 	"github.com/signintech/gopdf"
+	pdf "github.com/unidoc/unidoc/pdf/model"
 )
 
 // Pdf generate PDF file
@@ -32,6 +34,7 @@ type pdfBook struct {
 	chaptersPerFile int
 	chapters        int
 	splitIndex      int
+	implicitMerge   bool
 }
 
 // Info output self information
@@ -145,6 +148,10 @@ func (m *pdfBook) SetFontSize(titleFontSize int, contentFontSize int) {
 
 // Begin prepare book environment
 func (m *pdfBook) Begin() {
+	if m.pagesPerFile == 0 && m.chaptersPerFile == 0 {
+		m.implicitMerge = true
+		m.pagesPerFile = 500
+	}
 	m.beginBook()
 	m.newPage()
 }
@@ -165,9 +172,74 @@ func (m *pdfBook) beginBook() {
 	}
 }
 
+func (m *pdfBook) mergeFile(inputPath string, pdfWriter *pdf.PdfWriter) error {
+	f, err := os.Open(inputPath)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	pdfReader, err := pdf.NewPdfReader(f)
+	if err != nil {
+		return err
+	}
+
+	numPages, err := pdfReader.GetNumPages()
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < numPages; i++ {
+		pageNum := i + 1
+
+		page, err := pdfReader.GetPage(pageNum)
+		if err != nil {
+			return err
+		}
+
+		err = pdfWriter.AddPage(page)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // End generate files that kindlegen needs
 func (m *pdfBook) End() {
 	m.endBook()
+	if m.implicitMerge {
+		pdfWriter := pdf.NewPdfWriter()
+
+		var inputPaths []string
+		for i := 1; ; i++ {
+			inputPath := fmt.Sprintf("%s(%d).pdf", m.title, i)
+			if _, err := os.Stat(inputPath); os.IsNotExist(err) {
+				break
+			}
+			inputPaths = append(inputPaths, inputPath)
+		}
+
+		for _, inputPath := range inputPaths {
+			if err := m.mergeFile(inputPath, &pdfWriter); err != nil {
+				log.Println("merge", inputPath, "failed:", err)
+			}
+			os.Remove(inputPath)
+		}
+
+		fWrite, err := os.Create(m.title + ".pdf")
+		if err != nil {
+			log.Println("creating final PDF file failed", err)
+			return
+		}
+
+		err = pdfWriter.Write(fWrite)
+		if err != nil {
+			log.Println("writing PDF failed", err)
+		}
+		fWrite.Close()
+	}
 }
 
 func (m *pdfBook) endBook() {
