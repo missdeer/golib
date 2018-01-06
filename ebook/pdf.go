@@ -195,7 +195,8 @@ func (m *pdfBook) preprocessContent(content string) string {
 	c = strings.Replace(c, `&quot;`, `"`, -1)
 	c = strings.Replace(c, `&#39;`, `'`, -1)
 	c = strings.Replace(c, `&nbsp;`, ` `, -1)
-	for len(c) > 0 && c[0] == byte(' ') {
+	c = strings.Replace(c, `</p><p>`, "\n", -1)
+	for len(c) > 0 && (c[0] == byte(' ') || c[0] == byte('\n')) {
 		c = c[1:]
 	}
 	for len(c) > 0 && strings.HasPrefix(c, `　`) {
@@ -241,7 +242,7 @@ func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string)
 	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize))
 
 	c := m.preprocessContent(articleContent)
-	lineBreak := "</p><p>"
+	lineBreak := "\n"
 	for pos := strings.Index(c, lineBreak); ; pos = strings.Index(c, lineBreak) {
 		if pos <= 0 {
 			if len(c) > 0 {
