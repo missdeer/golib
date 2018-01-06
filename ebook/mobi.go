@@ -168,6 +168,11 @@ func (m *mobiBook) PagesPerFile(int) {
 
 }
 
+// ChaptersPerFile dummy funciton for interface
+func (m *mobiBook) ChaptersPerFile(int) {
+
+}
+
 // SetMargins dummy funciton for interface
 func (m *mobiBook) SetMargins(left float64, top float64) {
 

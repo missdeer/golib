@@ -3,13 +3,11 @@ package ebook
 import (
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 	"unicode/utf8"
 
 	"github.com/signintech/gopdf"
-	pdf "github.com/unidoc/unidoc/pdf/model"
 )
 
 // Pdf generate PDF file
@@ -30,6 +28,10 @@ type pdfBook struct {
 	fontFamily      string
 	fontFile        string
 	pagesPerFile    int
+	pages           int
+	chaptersPerFile int
+	chapters        int
+	splitIndex      int
 }
 
 // Info output self information
@@ -40,6 +42,11 @@ func (m *pdfBook) Info() {
 // PagesPerFile how many smaller PDF files are expected to be generated
 func (m *pdfBook) PagesPerFile(n int) {
 	m.pagesPerFile = n
+}
+
+// ChaptersPerFile how many smaller PDF files are expected to be generated
+func (m *pdfBook) ChaptersPerFile(n int) {
+	m.chaptersPerFile = n
 }
 
 // SetLineSpacing set document line spacing
@@ -116,6 +123,10 @@ func (m *pdfBook) SetPageType(pageType string) {
 	case "7inch":
 		// FIXME
 		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 297.64, H: 386.93}}
+	case "pc":
+		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
+		m.SetMargins(72, 89.9)
+		m.SetFontSize(16, 12)
 	default:
 		// work as A4 paper size
 		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
@@ -134,11 +145,16 @@ func (m *pdfBook) SetFontSize(titleFontSize int, contentFontSize int) {
 
 // Begin prepare book environment
 func (m *pdfBook) Begin() {
+	m.beginBook()
+	m.newPage()
+}
+
+func (m *pdfBook) beginBook() {
 	m.pdf = &gopdf.GoPdf{}
 	m.pdf.Start(*m.config)
+	m.pdf.SetCompressLevel(9)
 	m.pdf.SetLeftMargin(m.leftMargin)
 	m.pdf.SetTopMargin(m.topMargin)
-	m.pdf.AddPage()
 
 	if m.fontFile != "" {
 		err := m.pdf.AddTTFFont(m.fontFamily, m.fontFile)
@@ -151,6 +167,10 @@ func (m *pdfBook) Begin() {
 
 // End generate files that kindlegen needs
 func (m *pdfBook) End() {
+	m.endBook()
+}
+
+func (m *pdfBook) endBook() {
 	m.pdf.SetInfo(gopdf.PdfInfo{
 		Title:        m.title,
 		Author:       `GetNovel用户制作成PDF，并非小说原作者`,
@@ -159,72 +179,56 @@ func (m *pdfBook) End() {
 		Subject:      m.title + `：不费脑子的适合电子书设备（如Kindle DXG）看的网络小说`,
 		CreationDate: time.Now(),
 	})
-	m.pdf.WritePdf(m.title + ".pdf")
-	if m.pagesPerFile > 0 {
-		inputPath := m.title + ".pdf"
-
-		f, err := os.Open(inputPath)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		defer f.Close()
-
-		pdfReader, err := pdf.NewPdfReader(f)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		numPages, err := pdfReader.GetNumPages()
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		startPage := 1
-		for index := 1; startPage < numPages; index++ {
-			endPage := startPage + m.pagesPerFile - 1
-			if endPage > numPages {
-				endPage = numPages
-			}
-			outputPath := fmt.Sprintf("%s(%d).pdf", m.title, index)
-
-			pdfWriter := pdf.NewPdfWriter()
-			for i := startPage; i <= endPage; i++ {
-				pageNum := i
-
-				page, err := pdfReader.GetPage(pageNum)
-				if err != nil {
-					fmt.Println(err)
-				}
-
-				err = pdfWriter.AddPage(page)
-				if err != nil {
-					fmt.Println(err)
-				}
-			}
-
-			fWrite, err := os.Create(outputPath)
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			err = pdfWriter.Write(fWrite)
-			if err != nil {
-				fmt.Println(err)
-			}
-			fWrite.Close()
-			startPage = endPage + 1
-		}
-		os.Remove(m.title + ".pdf")
+	if m.pagesPerFile > 0 || m.chaptersPerFile > 0 {
+		m.splitIndex++
+		m.pdf.WritePdf(fmt.Sprintf("%s(%d).pdf", m.title, m.splitIndex))
+	} else {
+		m.pdf.WritePdf(m.title + ".pdf")
 	}
+}
+
+func (m *pdfBook) preprocessContent(content string) string {
+	c := strings.Replace(content, `<br/>`, "\n", -1)
+	c = strings.Replace(c, `&amp;`, `&`, -1)
+	c = strings.Replace(c, `&lt;`, `<`, -1)
+	c = strings.Replace(c, `&gt;`, `>`, -1)
+	c = strings.Replace(c, `&quot;`, `"`, -1)
+	c = strings.Replace(c, `&#39;`, `'`, -1)
+	c = strings.Replace(c, `&nbsp;`, ` `, -1)
+	return c
+}
+
+func (m *pdfBook) newPage() {
+	if m.pages > 0 && m.pages == m.pagesPerFile {
+		m.endBook()
+		m.beginBook()
+		m.pages = 0
+	}
+	m.pdf.AddPage()
+	m.pages++
+	m.height = 0
+	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize))
+}
+
+func (m *pdfBook) newChapter() {
+	if m.chapters > 0 && m.chapters == m.chaptersPerFile {
+		m.endBook()
+		m.beginBook()
+		m.chapters = 0
+		m.pages = 0
+
+		m.pdf.AddPage()
+		m.pages++
+		m.height = 0
+	}
+	m.chapters++
 }
 
 // AppendContent append book content
 func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string) {
-	if m.height+m.titleFontSize+2 > m.maxH {
-		m.pdf.AddPage()
-
-		m.height = 0
+	m.newChapter()
+	if m.height+m.titleFontSize*m.lineSpacing > m.maxH {
+		m.newPage()
 	}
 	m.pdf.SetFont(m.fontFamily, "", int(m.titleFontSize))
 	m.pdf.Cell(nil, articleTitle)
@@ -232,16 +236,22 @@ func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string)
 	m.height += m.titleFontSize * m.lineSpacing
 	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize))
 
-	for pos := strings.Index(articleContent, "</p><p>"); ; pos = strings.Index(articleContent, "</p><p>") {
+	c := m.preprocessContent(articleContent)
+	for pos := strings.Index(c, "</p><p>"); ; pos = strings.Index(c, "</p><p>") {
 		if pos <= 0 {
-			if len(articleContent) > 0 {
-				m.writeText(articleContent)
+			if len(c) > 0 {
+				m.writeText(c)
 			}
 			break
 		}
-		t := articleContent[:pos]
+		t := c[:pos]
 		m.writeText(t)
-		articleContent = articleContent[pos+7:]
+		c = c[pos+7:]
+	}
+	// append a new line at the end of chapter
+	if m.height+m.contentFontSize*m.lineSpacing < m.maxH {
+		m.pdf.Br(m.contentFontSize * m.lineSpacing)
+		m.height += m.contentFontSize * m.lineSpacing
 	}
 }
 
@@ -261,10 +271,8 @@ func (m *pdfBook) writeText(t string) {
 		}
 		count += length
 		if width, _ := m.pdf.MeasureTextWidth(t[:count]); width > m.maxW {
-			if m.height+m.contentFontSize+2 > m.maxH {
-				m.pdf.AddPage()
-
-				m.height = 0
+			if m.height+m.contentFontSize*m.lineSpacing > m.maxH {
+				m.newPage()
 			}
 			count -= length
 			m.pdf.Cell(nil, t[:count])
@@ -278,10 +286,8 @@ func (m *pdfBook) writeText(t string) {
 		}
 	}
 	if len(t) > 0 {
-		if m.height+m.contentFontSize+2 > m.maxH {
-			m.pdf.AddPage()
-
-			m.height = 0
+		if m.height+m.contentFontSize*m.lineSpacing > m.maxH {
+			m.newPage()
 		}
 		m.pdf.Cell(nil, t)
 		m.pdf.Br(m.contentFontSize * m.lineSpacing)

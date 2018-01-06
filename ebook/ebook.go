@@ -14,6 +14,7 @@ type IBook interface {
 	SetFontFamily(string)
 	SetFontFile(string)
 	PagesPerFile(int)
+	ChaptersPerFile(int)
 }
 
 func NewBook(bookType string) IBook {

@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	epub "github.com/bmaupin/go-epub"
+	epub "github.com/missdeer/go-epub"
 )
 
 var (
@@ -77,6 +77,11 @@ type epubBook struct {
 
 // PagesPerFile dummy funciton for interface
 func (m *epubBook) PagesPerFile(int) {
+
+}
+
+// ChaptersPerFile dummy funciton for interface
+func (m *epubBook) ChaptersPerFile(int) {
 
 }
 
