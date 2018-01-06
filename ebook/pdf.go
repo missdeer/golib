@@ -195,6 +195,12 @@ func (m *pdfBook) preprocessContent(content string) string {
 	c = strings.Replace(c, `&quot;`, `"`, -1)
 	c = strings.Replace(c, `&#39;`, `'`, -1)
 	c = strings.Replace(c, `&nbsp;`, ` `, -1)
+	for len(c) > 0 && c[0] == byte(' ') {
+		c = c[1:]
+	}
+	for len(c) > 0 && strings.HasPrefix(c, `　`) {
+		c = c[len(`　`):]
+	}
 	return c
 }
 
@@ -231,13 +237,12 @@ func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string)
 		m.newPage()
 	}
 	m.pdf.SetFont(m.fontFamily, "", int(m.titleFontSize))
-	m.pdf.Cell(nil, articleTitle)
-	m.pdf.Br(m.titleFontSize * m.lineSpacing)
-	m.height += m.titleFontSize * m.lineSpacing
+	m.writeTitleLine(articleTitle)
 	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize))
 
 	c := m.preprocessContent(articleContent)
-	for pos := strings.Index(c, "</p><p>"); ; pos = strings.Index(c, "</p><p>") {
+	lineBreak := "</p><p>"
+	for pos := strings.Index(c, lineBreak); ; pos = strings.Index(c, lineBreak) {
 		if pos <= 0 {
 			if len(c) > 0 {
 				m.writeText(c)
@@ -246,7 +251,7 @@ func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string)
 		}
 		t := c[:pos]
 		m.writeText(t)
-		c = c[pos+7:]
+		c = c[pos+len(lineBreak):]
 	}
 	// append a new line at the end of chapter
 	if m.height+m.contentFontSize*m.lineSpacing < m.maxH {
@@ -258,6 +263,18 @@ func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string)
 // SetTitle set book title
 func (m *pdfBook) SetTitle(title string) {
 	m.title = title
+}
+
+func (m *pdfBook) writeTitleLine(t string) {
+	m.pdf.Cell(nil, t)
+	m.pdf.Br(m.titleFontSize * m.lineSpacing)
+	m.height += m.titleFontSize * m.lineSpacing
+}
+
+func (m *pdfBook) writeContentLine(t string) {
+	m.pdf.Cell(nil, t)
+	m.pdf.Br(m.contentFontSize * m.lineSpacing)
+	m.height += m.contentFontSize * m.lineSpacing
 }
 
 func (m *pdfBook) writeText(t string) {
@@ -275,9 +292,7 @@ func (m *pdfBook) writeText(t string) {
 				m.newPage()
 			}
 			count -= length
-			m.pdf.Cell(nil, t[:count])
-			m.pdf.Br(m.contentFontSize * m.lineSpacing)
-			m.height += m.contentFontSize * m.lineSpacing
+			m.writeContentLine(t[:count])
 			t = t[count:]
 			index = 0
 			count = 0
@@ -289,8 +304,6 @@ func (m *pdfBook) writeText(t string) {
 		if m.height+m.contentFontSize*m.lineSpacing > m.maxH {
 			m.newPage()
 		}
-		m.pdf.Cell(nil, t)
-		m.pdf.Br(m.contentFontSize * m.lineSpacing)
-		m.height += m.contentFontSize * m.lineSpacing
+		m.writeContentLine(t)
 	}
 }
