@@ -20,15 +20,16 @@ type pdfBook struct {
 	config          *gopdf.Config
 	leftMargin      float64
 	topMargin       float64
-	w               float64
-	h               float64
-	maxW            float64
-	maxH            float64
+	paperWidth      float64
+	paperHeight     float64
+	contentWidth    float64
+	contentHeight   float64
 	titleFontSize   float64
 	contentFontSize float64
 	lineSpacing     float64
 	fontFamily      string
 	fontFile        string
+	pageType        string
 	pagesPerFile    int
 	pages           int
 	chaptersPerFile int
@@ -71,8 +72,8 @@ func (m *pdfBook) SetFontFile(file string) {
 func (m *pdfBook) SetMargins(left float64, top float64) {
 	m.leftMargin = left
 	m.topMargin = top
-	m.maxW = m.w - m.leftMargin*2
-	m.maxH = m.h - m.topMargin*2
+	m.contentWidth = m.paperWidth - m.leftMargin*2
+	m.contentHeight = m.paperHeight - m.topMargin*2
 }
 
 // SetPageType dummy funciton for interface
@@ -134,10 +135,11 @@ func (m *pdfBook) SetPageType(pageType string) {
 		// work as A4 paper size
 		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
 	}
-	m.w = m.config.PageSize.W
-	m.h = m.config.PageSize.H
-	m.maxW = m.w - m.leftMargin*2
-	m.maxH = m.h - m.topMargin*2
+	m.pageType = pageType
+	m.paperWidth = m.config.PageSize.W
+	m.paperHeight = m.config.PageSize.H
+	m.contentWidth = m.paperWidth - m.leftMargin*2
+	m.contentHeight = m.paperHeight - m.topMargin*2
 }
 
 // SetFontSize dummy funciton for interface
@@ -214,7 +216,7 @@ func (m *pdfBook) End() {
 
 		var inputPaths []string
 		for i := 1; ; i++ {
-			inputPath := fmt.Sprintf("%s(%.4d).pdf", m.title, i)
+			inputPath := fmt.Sprintf("%s_%s(%.4d).pdf", m.title, m.pageType, i)
 			if _, err := os.Stat(inputPath); os.IsNotExist(err) {
 				break
 			}
@@ -228,7 +230,7 @@ func (m *pdfBook) End() {
 			os.Remove(inputPath)
 		}
 
-		fWrite, err := os.Create(m.title + ".pdf")
+		fWrite, err := os.Create(fmt.Sprintf("%s_%s.pdf", m.title, m.pageType))
 		if err != nil {
 			log.Println("creating final PDF file failed", err)
 			return
@@ -253,9 +255,9 @@ func (m *pdfBook) endBook() {
 	})
 	if m.pagesPerFile > 0 || m.chaptersPerFile > 0 {
 		m.splitIndex++
-		m.pdf.WritePdf(fmt.Sprintf("%s(%.4d).pdf", m.title, m.splitIndex))
+		m.pdf.WritePdf(fmt.Sprintf("%s_%s(%.4d).pdf", m.title, m.pageType, m.splitIndex))
 	} else {
-		m.pdf.WritePdf(m.title + ".pdf")
+		m.pdf.WritePdf(fmt.Sprintf("%s_%s.pdf", m.title, m.pageType))
 	}
 }
 
@@ -306,7 +308,7 @@ func (m *pdfBook) newChapter() {
 // AppendContent append book content
 func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string) {
 	m.newChapter()
-	if m.height+m.titleFontSize*m.lineSpacing > m.maxH {
+	if m.height+m.titleFontSize*m.lineSpacing > m.contentHeight {
 		m.newPage()
 	}
 	m.pdf.SetFont(m.fontFamily, "", int(m.titleFontSize))
@@ -327,7 +329,7 @@ func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string)
 		c = c[pos+len(lineBreak):]
 	}
 	// append a new line at the end of chapter
-	if m.height+m.contentFontSize*m.lineSpacing < m.maxH {
+	if m.height+m.contentFontSize*m.lineSpacing < m.contentHeight {
 		m.pdf.Br(m.contentFontSize * m.lineSpacing)
 		m.height += m.contentFontSize * m.lineSpacing
 	}
@@ -360,8 +362,8 @@ func (m *pdfBook) writeText(t string) {
 			break
 		}
 		count += length
-		if width, _ := m.pdf.MeasureTextWidth(t[:count]); width > m.maxW {
-			if m.height+m.contentFontSize*m.lineSpacing > m.maxH {
+		if width, _ := m.pdf.MeasureTextWidth(t[:count]); width > m.contentWidth {
+			if m.height+m.contentFontSize*m.lineSpacing > m.contentHeight {
 				m.newPage()
 			}
 			count -= length
@@ -374,7 +376,7 @@ func (m *pdfBook) writeText(t string) {
 		}
 	}
 	if len(t) > 0 {
-		if m.height+m.contentFontSize*m.lineSpacing > m.maxH {
+		if m.height+m.contentFontSize*m.lineSpacing > m.contentHeight {
 			m.newPage()
 		}
 		m.writeContentLine(t)
