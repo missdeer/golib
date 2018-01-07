@@ -150,7 +150,7 @@ func (m *pdfBook) SetFontSize(titleFontSize int, contentFontSize int) {
 func (m *pdfBook) Begin() {
 	if m.pagesPerFile == 0 && m.chaptersPerFile == 0 {
 		m.implicitMerge = true
-		m.pagesPerFile = 500
+		m.chaptersPerFile = 10
 	}
 	m.beginBook()
 	m.newPage()
@@ -214,7 +214,7 @@ func (m *pdfBook) End() {
 
 		var inputPaths []string
 		for i := 1; ; i++ {
-			inputPath := fmt.Sprintf("%s(%d).pdf", m.title, i)
+			inputPath := fmt.Sprintf("%s(%.4d).pdf", m.title, i)
 			if _, err := os.Stat(inputPath); os.IsNotExist(err) {
 				break
 			}
@@ -253,7 +253,7 @@ func (m *pdfBook) endBook() {
 	})
 	if m.pagesPerFile > 0 || m.chaptersPerFile > 0 {
 		m.splitIndex++
-		m.pdf.WritePdf(fmt.Sprintf("%s(%d).pdf", m.title, m.splitIndex))
+		m.pdf.WritePdf(fmt.Sprintf("%s(%.4d).pdf", m.title, m.splitIndex))
 	} else {
 		m.pdf.WritePdf(m.title + ".pdf")
 	}
