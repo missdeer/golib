@@ -27,6 +27,7 @@ type pdfBook struct {
 	titleFontSize   float64
 	contentFontSize float64
 	lineSpacing     float64
+	output          string
 	fontFamily      string
 	fontFile        string
 	pageType        string
@@ -36,6 +37,11 @@ type pdfBook struct {
 	chapters        int
 	splitIndex      int
 	implicitMerge   bool
+}
+
+// Output set the output file path
+func (m *pdfBook) Output(o string) {
+	m.output = o
 }
 
 // Info output self information
@@ -230,7 +236,10 @@ func (m *pdfBook) End() {
 			os.Remove(inputPath)
 		}
 
-		fWrite, err := os.Create(fmt.Sprintf("%s_%s.pdf", m.title, m.pageType))
+		if m.output == "" {
+			m.output = fmt.Sprintf("%s_%s.pdf", m.title, m.pageType)
+		}
+		fWrite, err := os.Create(m.output)
 		if err != nil {
 			log.Println("creating final PDF file failed", err)
 			return
@@ -257,7 +266,10 @@ func (m *pdfBook) endBook() {
 		m.splitIndex++
 		m.pdf.WritePdf(fmt.Sprintf("%s_%s(%.4d).pdf", m.title, m.pageType, m.splitIndex))
 	} else {
-		m.pdf.WritePdf(fmt.Sprintf("%s_%s.pdf", m.title, m.pageType))
+		if m.output == "" {
+			m.output = fmt.Sprintf("%s_%s.pdf", m.title, m.pageType)
+		}
+		m.pdf.WritePdf(m.output)
 	}
 }
 

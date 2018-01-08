@@ -15,8 +15,10 @@ type IBook interface {
 	SetFontFile(string)
 	PagesPerFile(int)
 	ChaptersPerFile(int)
+	Output(string)
 }
 
+// NewBook create an instance and return as an interface
 func NewBook(bookType string) IBook {
 	switch bookType {
 	case "pdf":

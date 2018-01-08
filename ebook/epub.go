@@ -73,6 +73,12 @@ type epubBook struct {
 	e        *epub.Epub
 	title    string
 	fontFile string
+	output   string
+}
+
+// Output set the output file path
+func (m *epubBook) Output(o string) {
+	m.output = o
 }
 
 // PagesPerFile dummy funciton for interface
@@ -146,7 +152,10 @@ func (m *epubBook) Begin() {
 // End generate epub file
 func (m *epubBook) End() {
 	// Write the EPUB
-	err := m.e.Write(m.title + ".epub")
+	if m.output == "" {
+		m.output = m.title + ".epub"
+	}
+	err := m.e.Write(m.output)
 	if err != nil {
 		// handle error
 		log.Fatal(err)

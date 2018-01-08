@@ -16,6 +16,7 @@ type mobiBook struct {
 	title      string
 	uid        int64
 	count      int
+	output     string
 	tocTmp     *os.File
 	contentTmp *os.File
 	navTmp     *os.File
@@ -157,6 +158,11 @@ var (
 	</package>
 	`
 )
+
+// Output set the output file path
+func (m *mobiBook) Output(o string) {
+	m.output = o
+}
 
 // Info output self information
 func (m *mobiBook) Info() {
