@@ -11,7 +11,6 @@ type IBook interface {
 	SetPageType(string)
 	SetFontSize(int, int)
 	SetLineSpacing(float64)
-	SetFontFamily(string)
 	SetFontFile(string)
 	PagesPerFile(int)
 	ChaptersPerFile(int)

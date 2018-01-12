@@ -11,7 +11,7 @@ import (
 
 var (
 	css = `	@font-face{
-			font-family: "%CustomFont%";
+			font-family: "CustomFont";
 			src: url(%CustomFontFile%);
 		}
 		body{
@@ -98,11 +98,6 @@ func (m *epubBook) Info() {
 
 // SetLineSpacing dummy funciton for interface
 func (m *epubBook) SetLineSpacing(lineSpacing float64) {
-}
-
-// SetFontFamily set custom font family
-func (m *epubBook) SetFontFamily(family string) {
-	css = strings.Replace(css, "%CustomFont%", family, -1)
 }
 
 // SetFontFile set custom font file

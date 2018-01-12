@@ -30,7 +30,7 @@ var (
 		<title>%s</title>
 		<style type="text/css">
 		@font-face{
-			font-family: "%CustomFont%";
+			font-family: "CustomFont";
 			src: url(%CustomFontFile%);
 		}
 		body{
@@ -192,11 +192,6 @@ func (m *mobiBook) SetPageType(pageType string) {
 // SetFontSize dummy funciton for interface
 func (m *mobiBook) SetFontSize(titleFontSize int, contentFontSize int) {
 
-}
-
-// SetFontFamily set custom font family
-func (m *mobiBook) SetFontFamily(family string) {
-	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFont%", family, -1)
 }
 
 // SetFontFile set custom font file

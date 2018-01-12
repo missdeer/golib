@@ -2,12 +2,14 @@ package ebook
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 	"time"
 	"unicode/utf8"
 
+	"github.com/golang/freetype/truetype"
 	"github.com/signintech/gopdf"
 	pdf "github.com/unidoc/unidoc/pdf/model"
 )
@@ -64,14 +66,30 @@ func (m *pdfBook) SetLineSpacing(lineSpacing float64) {
 	m.lineSpacing = lineSpacing
 }
 
-// SetFontFamily set custom font family
-func (m *pdfBook) SetFontFamily(family string) {
-	m.fontFamily = family
-}
-
 // SetFontFile set custom font file
 func (m *pdfBook) SetFontFile(file string) {
 	m.fontFile = file
+
+	// check font files
+	fontFd, err := os.OpenFile(m.fontFile, os.O_RDONLY, 0644)
+	if err != nil {
+		log.Fatalln("can't find font file", m.fontFile, err)
+		return
+	}
+	defer fontFd.Close()
+
+	fontContent, err := ioutil.ReadAll(fontFd)
+	if err != nil {
+		log.Fatalln("can't read font file", err)
+		return
+	}
+
+	font, err := truetype.Parse(fontContent)
+	if err != nil {
+		log.Fatalln("can't parse TTF font", err)
+		return
+	}
+	m.fontFamily = font.Name(truetype.NameIDFontFamily)
 }
 
 // SetMargins dummy funciton for interface
