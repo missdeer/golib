@@ -10,7 +10,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/golang/freetype/truetype"
-	"github.com/signintech/gopdf"
+	"github.com/missdeer/gopdf"
 	pdf "github.com/unidoc/unidoc/pdf/model"
 )
 
@@ -174,10 +174,10 @@ func (m *pdfBook) SetFontSize(titleFontSize int, contentFontSize int) {
 
 // Begin prepare book environment
 func (m *pdfBook) Begin() {
-	if m.pagesPerFile == 0 && m.chaptersPerFile == 0 {
-		m.implicitMerge = true
-		m.chaptersPerFile = 10
-	}
+	// if m.pagesPerFile == 0 && m.chaptersPerFile == 0 {
+	// 	m.implicitMerge = true
+	// 	m.chaptersPerFile = 10
+	// }
 	m.beginBook()
 	m.newPage()
 }
