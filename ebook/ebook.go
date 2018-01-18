@@ -15,10 +15,6 @@ type IBook interface {
 	PagesPerFile(int)
 	ChaptersPerFile(int)
 	Output(string)
-	FromChapter(int)
-	FromTitle(string)
-	ToChapter(int)
-	ToTitle(string)
 }
 
 // NewBook create an instance and return as an interface

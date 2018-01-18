@@ -29,12 +29,6 @@ type pdfBook struct {
 	titleFontSize   float64
 	contentFontSize float64
 	lineSpacing     float64
-	started         bool
-	fromChapter     int
-	toChapter       int
-	chapterCount    int
-	fromTitle       string
-	toTitle         string
 	output          string
 	fontFamily      string
 	fontFile        string
@@ -44,26 +38,6 @@ type pdfBook struct {
 	chaptersPerFile int
 	chapters        int
 	splitIndex      int
-}
-
-// FromChapter set from chapter number from command line option
-func (m *pdfBook) FromChapter(c int) {
-	m.fromChapter = c
-}
-
-// FromTitle set from title from command line option
-func (m *pdfBook) FromTitle(t string) {
-	m.fromTitle = t
-}
-
-// ToChapter set to chapter number from command line option
-func (m *pdfBook) ToChapter(c int) {
-	m.toChapter = c
-}
-
-// ToTitle set to title from command line option
-func (m *pdfBook) ToTitle(t string) {
-	m.toTitle = t
 }
 
 // Output set the output file path
@@ -199,9 +173,6 @@ func (m *pdfBook) SetFontSize(titleFontSize int, contentFontSize int) {
 
 // Begin prepare book environment
 func (m *pdfBook) Begin() {
-	if m.toChapter == 0 && m.toTitle == "" && m.fromChapter == 0 && m.fromTitle == "" {
-		m.started = true
-	}
 	m.beginBook()
 	m.newPage()
 }
@@ -327,33 +298,6 @@ func (m *pdfBook) newChapter() {
 
 // AppendContent append book content
 func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string) {
-	m.chapterCount++
-	if m.started {
-		// check toChapter or toTitle to end
-		if m.chapterCount == m.toChapter {
-			m.started = false
-		}
-		if m.toTitle == articleTitle {
-			m.started = false
-		}
-		if !m.started {
-			m.End()
-			os.Exit(0)
-			return
-		}
-	} else {
-		// check fromChapter or fromTitle to start
-		if m.chapterCount == m.fromChapter {
-			m.started = true
-		}
-		if articleTitle == m.fromTitle {
-			m.started = true
-		}
-		if !m.started {
-			return
-		}
-	}
-
 	m.newChapter()
 	if m.height+m.titleFontSize*m.lineSpacing > m.contentHeight {
 		m.newPage()
