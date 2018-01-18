@@ -13,13 +13,19 @@ import (
 
 // Mobi generate files that used to make a mobi file by kindlegen
 type mobiBook struct {
-	title      string
-	uid        int64
-	count      int
-	output     string
-	tocTmp     *os.File
-	contentTmp *os.File
-	navTmp     *os.File
+	title        string
+	uid          int64
+	count        int
+	output       string
+	started      bool
+	fromChapter  int
+	toChapter    int
+	chapterCount int
+	fromTitle    string
+	toTitle      string
+	tocTmp       *os.File
+	contentTmp   *os.File
+	navTmp       *os.File
 }
 
 var (
@@ -159,6 +165,26 @@ var (
 	`
 )
 
+// FromChapter set from chapter number from command line option
+func (m *mobiBook) FromChapter(c int) {
+	m.fromChapter = c
+}
+
+// FromTitle set from title from command line option
+func (m *mobiBook) FromTitle(t string) {
+	m.fromTitle = t
+}
+
+// ToChapter set to chapter number from command line option
+func (m *mobiBook) ToChapter(c int) {
+	m.toChapter = c
+}
+
+// ToTitle set to title from command line option
+func (m *mobiBook) ToTitle(t string) {
+	m.toTitle = t
+}
+
 // Output set the output file path
 func (m *mobiBook) Output(o string) {
 	m.output = o
@@ -206,6 +232,9 @@ func (m *mobiBook) SetLineSpacing(float64) {
 
 // Begin prepare book environment
 func (m *mobiBook) Begin() {
+	if m.toChapter == 0 && m.toTitle == "" && m.fromChapter == 0 && m.fromTitle == "" {
+		m.started = true
+	}
 	var err error
 	m.tocTmp, err = os.OpenFile(`toc.tmp`, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
@@ -243,6 +272,32 @@ func (m *mobiBook) End() {
 
 // AppendContent append book content
 func (m *mobiBook) AppendContent(articleTitle, articleURL, articleContent string) {
+	m.chapterCount++
+	if m.started {
+		// check toChapter or toTitle to end
+		if m.chapterCount == m.toChapter {
+			m.started = false
+		}
+		if m.toTitle == articleTitle {
+			m.started = false
+		}
+		if !m.started {
+			m.End()
+			os.Exit(0)
+			return
+		}
+	} else {
+		// check fromChapter or fromTitle to start
+		if m.chapterCount == m.fromChapter {
+			m.started = true
+		}
+		if articleTitle == m.fromTitle {
+			m.started = true
+		}
+		if !m.started {
+			return
+		}
+	}
 	m.tocTmp.WriteString(fmt.Sprintf(`<li><a href="#article_%d">%s</a></li>`, m.count, articleTitle))
 	m.contentTmp.WriteString(fmt.Sprintf(`<div id="article_%d" class="article"><h2 class="do_article_title"><a href="%s">%s</a></h2><div><p>%s</p></div></div>`,
 		m.count, articleURL, articleTitle, articleContent))

@@ -29,6 +29,12 @@ type pdfBook struct {
 	titleFontSize   float64
 	contentFontSize float64
 	lineSpacing     float64
+	started         bool
+	fromChapter     int
+	toChapter       int
+	chapterCount    int
+	fromTitle       string
+	toTitle         string
 	output          string
 	fontFamily      string
 	fontFile        string
@@ -38,7 +44,26 @@ type pdfBook struct {
 	chaptersPerFile int
 	chapters        int
 	splitIndex      int
-	implicitMerge   bool
+}
+
+// FromChapter set from chapter number from command line option
+func (m *pdfBook) FromChapter(c int) {
+	m.fromChapter = c
+}
+
+// FromTitle set from title from command line option
+func (m *pdfBook) FromTitle(t string) {
+	m.fromTitle = t
+}
+
+// ToChapter set to chapter number from command line option
+func (m *pdfBook) ToChapter(c int) {
+	m.toChapter = c
+}
+
+// ToTitle set to title from command line option
+func (m *pdfBook) ToTitle(t string) {
+	m.toTitle = t
 }
 
 // Output set the output file path
@@ -174,10 +199,9 @@ func (m *pdfBook) SetFontSize(titleFontSize int, contentFontSize int) {
 
 // Begin prepare book environment
 func (m *pdfBook) Begin() {
-	// if m.pagesPerFile == 0 && m.chaptersPerFile == 0 {
-	// 	m.implicitMerge = true
-	// 	m.chaptersPerFile = 10
-	// }
+	if m.toChapter == 0 && m.toTitle == "" && m.fromChapter == 0 && m.fromTitle == "" {
+		m.started = true
+	}
 	m.beginBook()
 	m.newPage()
 }
@@ -235,40 +259,6 @@ func (m *pdfBook) mergeFile(inputPath string, pdfWriter *pdf.PdfWriter) error {
 // End generate files that kindlegen needs
 func (m *pdfBook) End() {
 	m.endBook()
-	if m.implicitMerge {
-		pdfWriter := pdf.NewPdfWriter()
-
-		var inputPaths []string
-		for i := 1; ; i++ {
-			inputPath := fmt.Sprintf("%s_%s(%.4d).pdf", m.title, m.pageType, i)
-			if _, err := os.Stat(inputPath); os.IsNotExist(err) {
-				break
-			}
-			inputPaths = append(inputPaths, inputPath)
-		}
-
-		for _, inputPath := range inputPaths {
-			if err := m.mergeFile(inputPath, &pdfWriter); err != nil {
-				log.Println("merge", inputPath, "failed:", err)
-			}
-			os.Remove(inputPath)
-		}
-
-		if m.output == "" {
-			m.output = fmt.Sprintf("%s_%s.pdf", m.title, m.pageType)
-		}
-		fWrite, err := os.Create(m.output)
-		if err != nil {
-			log.Println("creating final PDF file failed", err)
-			return
-		}
-
-		err = pdfWriter.Write(fWrite)
-		if err != nil {
-			log.Println("writing PDF failed", err)
-		}
-		fWrite.Close()
-	}
 }
 
 func (m *pdfBook) endBook() {
@@ -337,6 +327,33 @@ func (m *pdfBook) newChapter() {
 
 // AppendContent append book content
 func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string) {
+	m.chapterCount++
+	if m.started {
+		// check toChapter or toTitle to end
+		if m.chapterCount == m.toChapter {
+			m.started = false
+		}
+		if m.toTitle == articleTitle {
+			m.started = false
+		}
+		if !m.started {
+			m.End()
+			os.Exit(0)
+			return
+		}
+	} else {
+		// check fromChapter or fromTitle to start
+		if m.chapterCount == m.fromChapter {
+			m.started = true
+		}
+		if articleTitle == m.fromTitle {
+			m.started = true
+		}
+		if !m.started {
+			return
+		}
+	}
+
 	m.newChapter()
 	if m.height+m.titleFontSize*m.lineSpacing > m.contentHeight {
 		m.newPage()
