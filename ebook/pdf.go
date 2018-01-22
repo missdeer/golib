@@ -11,7 +11,6 @@ import (
 
 	"github.com/golang/freetype/truetype"
 	"github.com/missdeer/gopdf"
-	pdf "github.com/unidoc/unidoc/pdf/model"
 )
 
 // Pdf generate PDF file
@@ -193,40 +192,6 @@ func (m *pdfBook) beginBook() {
 	}
 }
 
-func (m *pdfBook) mergeFile(inputPath string, pdfWriter *pdf.PdfWriter) error {
-	f, err := os.Open(inputPath)
-	if err != nil {
-		return err
-	}
-
-	defer f.Close()
-
-	pdfReader, err := pdf.NewPdfReader(f)
-	if err != nil {
-		return err
-	}
-
-	numPages, err := pdfReader.GetNumPages()
-	if err != nil {
-		return err
-	}
-
-	for i := 0; i < numPages; i++ {
-		pageNum := i + 1
-
-		page, err := pdfReader.GetPage(pageNum)
-		if err != nil {
-			return err
-		}
-
-		err = pdfWriter.AddPage(page)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // End generate files that kindlegen needs
 func (m *pdfBook) End() {
 	m.endBook()
@@ -303,7 +268,7 @@ func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string)
 		m.newPage()
 	}
 	m.pdf.SetFont(m.fontFamily, "", int(m.titleFontSize))
-	m.writeTitleLine(articleTitle)
+	m.writeTextLine(articleTitle, m.titleFontSize)
 	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize))
 
 	c := m.preprocessContent(articleContent)
@@ -311,12 +276,12 @@ func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string)
 	for pos := strings.Index(c, lineBreak); ; pos = strings.Index(c, lineBreak) {
 		if pos <= 0 {
 			if len(c) > 0 {
-				m.writeText(c)
+				m.writeText(c, m.contentFontSize)
 			}
 			break
 		}
 		t := c[:pos]
-		m.writeText(t)
+		m.writeText(t, m.contentFontSize)
 		c = c[pos+len(lineBreak):]
 	}
 	// append a new line at the end of chapter
@@ -329,21 +294,29 @@ func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string)
 // SetTitle set book title
 func (m *pdfBook) SetTitle(title string) {
 	m.title = title
+	m.writeCover()
+	m.newPage()
 }
 
-func (m *pdfBook) writeTitleLine(t string) {
+func (m *pdfBook) writeCover() {
+	titleOnCoverFontSize := 48
+	m.pdf.SetFont(m.fontFamily, "", titleOnCoverFontSize)
+	m.pdf.SetY(m.contentHeight/2 - float64(titleOnCoverFontSize))
+	m.pdf.SetX(m.leftMargin)
+	m.writeText(m.title, float64(titleOnCoverFontSize))
+	m.pdf.Br(float64(titleOnCoverFontSize) * m.lineSpacing)
+	subtitleOnCoverFontSize := 20
+	m.pdf.SetFont(m.fontFamily, "", subtitleOnCoverFontSize)
+	m.writeText(time.Now().Format(time.RFC3339), float64(subtitleOnCoverFontSize))
+}
+
+func (m *pdfBook) writeTextLine(t string, fontSize float64) {
 	m.pdf.Cell(nil, t)
-	m.pdf.Br(m.titleFontSize * m.lineSpacing)
-	m.height += m.titleFontSize * m.lineSpacing
+	m.pdf.Br(fontSize * m.lineSpacing)
+	m.height += fontSize * m.lineSpacing
 }
 
-func (m *pdfBook) writeContentLine(t string) {
-	m.pdf.Cell(nil, t)
-	m.pdf.Br(m.contentFontSize * m.lineSpacing)
-	m.height += m.contentFontSize * m.lineSpacing
-}
-
-func (m *pdfBook) writeText(t string) {
+func (m *pdfBook) writeText(t string, fontSize float64) {
 	t = `　　` + t
 	count := 0
 	index := 0
@@ -358,7 +331,7 @@ func (m *pdfBook) writeText(t string) {
 				m.newPage()
 			}
 			count -= length
-			m.writeContentLine(t[:count])
+			m.writeTextLine(t[:count], m.contentFontSize)
 			t = t[count:]
 			index = 0
 			count = 0
@@ -370,6 +343,6 @@ func (m *pdfBook) writeText(t string) {
 		if m.height+m.contentFontSize*m.lineSpacing > m.contentHeight {
 			m.newPage()
 		}
-		m.writeContentLine(t)
+		m.writeTextLine(t, m.contentFontSize)
 	}
 }
