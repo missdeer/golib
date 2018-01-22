@@ -9,7 +9,7 @@ import (
 )
 
 // GetBytes returns content as []byte
-func GetBytes(u string, headers map[string]string, timeout time.Duration, retryCount int) (c []byte, err error) {
+func GetBytes(u string, headers http.Header, timeout time.Duration, retryCount int) (c []byte, err error) {
 	client := &http.Client{
 		Timeout: timeout,
 	}
@@ -20,9 +20,7 @@ func GetBytes(u string, headers map[string]string, timeout time.Duration, retryC
 		return
 	}
 
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
+	req.Header = headers
 doRequest:
 	resp, err := client.Do(req)
 	if err != nil {
