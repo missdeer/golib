@@ -33,8 +33,8 @@ doRequest:
 		return
 	}
 
-	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
+		resp.Body.Close()
 		log.Println("response not 200:", resp.StatusCode, resp.Status)
 		retry++
 		if retry < retryCount {
@@ -45,6 +45,7 @@ doRequest:
 	}
 
 	c, err = ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
 	if err != nil {
 		log.Println("reading content failed")
 		retry++

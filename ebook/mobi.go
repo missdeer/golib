@@ -258,39 +258,39 @@ func (m *mobiBook) SetTitle(title string) {
 }
 
 func (m *mobiBook) writeContentHTML() {
-	contentHTML, err := os.OpenFile(`content.html`, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Println("opening file content.html for writing failed ", err)
-		return
-	}
-
 	tocTmp, err := os.OpenFile(`toc.tmp`, os.O_RDONLY, 0644)
 	if err != nil {
 		log.Println("opening file toc.tmp for reading failed ", err)
 		return
 	}
 	tocC, err := ioutil.ReadAll(tocTmp)
+	tocTmp.Close()
 	if err != nil {
 		log.Println("reading file toc.tmp failed ", err)
 		return
 	}
+
 	contentTmp, err := os.OpenFile(`content.tmp`, os.O_RDONLY, 0644)
 	if err != nil {
 		log.Println("opening file content.tmp for reading failed ", err)
 		return
 	}
 	contentC, err := ioutil.ReadAll(contentTmp)
+	contentTmp.Close()
 	if err != nil {
 		log.Println("reading file content.tmp failed ", err)
+		return
+	}
+
+	contentHTML, err := os.OpenFile(`content.html`, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		log.Println("opening file content.html for writing failed ", err)
 		return
 	}
 
 	contentHTML.WriteString(fmt.Sprintf(contentHTMLTemplate, m.title, m.title, time.Now().String(),
 		string(tocC), string(contentC)))
 	contentHTML.Close()
-
-	tocTmp.Close()
-	contentTmp.Close()
 }
 
 func (m *mobiBook) writeContentOPF() {

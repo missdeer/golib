@@ -74,9 +74,9 @@ func (m *pdfBook) SetFontFile(file string) {
 		log.Fatalln("can't find font file", m.fontFile, err)
 		return
 	}
-	defer fontFd.Close()
 
 	fontContent, err := ioutil.ReadAll(fontFd)
+	fontFd.Close()
 	if err != nil {
 		log.Fatalln("can't read font file", err)
 		return
