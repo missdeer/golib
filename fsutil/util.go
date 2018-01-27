@@ -1,3 +1,4 @@
+// package fsutil includes some util functions for operating file system
 package fsutil
 
 import (
