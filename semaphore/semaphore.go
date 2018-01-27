@@ -31,12 +31,12 @@ func (s *Semaphore) Release() {
 	s.s.Release(1)
 }
 
-// AcquireNum reference increased
-func (s *Semaphore) AcquireNum(n int64) {
+// AcquireN reference increased
+func (s *Semaphore) AcquireN(n int64) {
 	s.s.Acquire(s.ctx, n)
 }
 
-// ReleaseNum reference decreased
-func (s *Semaphore) ReleaseNum(n int64) {
+// ReleaseN reference decreased
+func (s *Semaphore) ReleaseN(n int64) {
 	s.s.Release(n)
 }
