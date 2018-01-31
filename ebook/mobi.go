@@ -9,6 +9,9 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode/utf8"
+
+	pinyin "github.com/mozillazg/go-pinyin"
 )
 
 // Mobi generate files that used to make a mobi file by kindlegen
@@ -238,7 +241,31 @@ func (m *mobiBook) End() {
 	os.Remove(`content.tmp`)
 	os.Remove(`nav.tmp`)
 	fmt.Println(`You need to run kindlegen utility to generate the final mobi file.`)
-	fmt.Println(`For example: kindlegen -c2 -o xxxx.mobi content.opf`)
+
+	finalName := ""
+	t := m.title
+	isCJK := false
+	for len(t) > 0 {
+		r, size := utf8.DecodeRuneInString(t)
+		if size == 1 {
+			if isCJK == true {
+				isCJK = false
+				finalName += "-"
+			}
+			finalName += string(r)
+		} else {
+			isCJK = true
+			py := pinyin.LazyPinyin(string(r), pinyin.NewArgs())
+			if finalName == "" {
+				finalName = py[0]
+			} else {
+				finalName += "-" + py[0]
+			}
+		}
+		t = t[size:]
+	}
+
+	fmt.Printf(`For example: kindlegen -c2 -o %s.mobi content.opf\n`, finalName)
 }
 
 // AppendContent append book content
