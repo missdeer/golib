@@ -7,9 +7,12 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/dfordsoft/golib/fsutil"
 
 	pinyin "github.com/mozillazg/go-pinyin"
 )
@@ -240,7 +243,15 @@ func (m *mobiBook) End() {
 	os.Remove(`toc.tmp`)
 	os.Remove(`content.tmp`)
 	os.Remove(`nav.tmp`)
-	fmt.Println(`You need to run kindlegen utility to generate the final mobi file.`)
+
+	kindlegen := os.Getenv(`KINDLEGEN_PATH`)
+	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
+		kindlegen, _ = exec.LookPath(`kindlegen`)
+	}
+
+	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
+		fmt.Println(`You need to run kindlegen utility to generate the final mobi file.`)
+	}
 
 	finalName := ""
 	t := m.title
@@ -267,7 +278,18 @@ func (m *mobiBook) End() {
 		t = t[size:]
 	}
 
-	fmt.Printf("For example: kindlegen -c2 -o %s.mobi content.opf\n", finalName)
+	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
+		fmt.Printf("For example: kindlegen -c2 -o %s.mobi content.opf\n", finalName)
+	} else {
+		cmd := exec.Command(kindlegen, "-c2", "-o", finalName+".mobi", "content.opf")
+		fmt.Println("Invoking kindlegen to generate", finalName+".mobi...")
+		err := cmd.Run()
+		if b, _ := fsutil.FileExists(finalName + ".mobi"); err != nil && !b {
+			log.Println(err)
+		} else {
+			fmt.Println(finalName+".mobi", "is generated.")
+		}
+	}
 }
 
 // AppendContent append book content
