@@ -256,16 +256,18 @@ func (m *mobiBook) End() {
 		} else {
 			isCJK = true
 			py := pinyin.LazyPinyin(string(r), pinyin.NewArgs())
-			if finalName == "" {
-				finalName = py[0]
-			} else {
-				finalName += "-" + py[0]
+			if len(py) > 0 {
+				if finalName == "" {
+					finalName = py[0]
+				} else {
+					finalName += "-" + py[0]
+				}
 			}
 		}
 		t = t[size:]
 	}
 
-	fmt.Printf(`For example: kindlegen -c2 -o %s.mobi content.opf\n`, finalName)
+	fmt.Printf("For example: kindlegen -c2 -o %s.mobi content.opf\n", finalName)
 }
 
 // AppendContent append book content
