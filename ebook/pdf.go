@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/golang/freetype/truetype"
@@ -88,6 +89,7 @@ func (m *pdfBook) SetFontFile(file string) {
 		return
 	}
 	m.fontFamily = font.Name(truetype.NameIDFontFamily)
+	m.fontFamily = ""
 }
 
 // SetMargins dummy funciton for interface
@@ -226,6 +228,9 @@ func (m *pdfBook) preprocessContent(content string) string {
 	c = strings.Replace(c, `&#39;`, `'`, -1)
 	c = strings.Replace(c, `&nbsp;`, ` `, -1)
 	c = strings.Replace(c, `</p><p>`, "\n", -1)
+	for idx := strings.Index(c, "\n\n"); idx >= 0; idx = strings.Index(c, "\n\n") {
+		c = strings.Replace(c, "\n\n", "\n", -1)
+	}
 	for len(c) > 0 && (c[0] == byte(' ') || c[0] == byte('\n')) {
 		c = c[1:]
 	}
@@ -263,6 +268,7 @@ func (m *pdfBook) newChapter() {
 
 // AppendContent append book content
 func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string) {
+	textLineCount = 0
 	m.newChapter()
 	if m.height+m.titleFontSize*m.lineSpacing > m.contentHeight {
 		m.newPage()
@@ -310,14 +316,36 @@ func (m *pdfBook) writeCover() {
 	m.writeText(time.Now().Format(time.RFC3339), float64(subtitleOnCoverFontSize))
 }
 
+var textLineCount = 0
+
 func (m *pdfBook) writeTextLine(t string, fontSize float64) {
-	m.pdf.Cell(nil, t)
+	if idx := strings.Index(t, "\n"); idx >= 0 {
+		fmt.Println("found line break finally", t)
+	}
+	if e := m.pdf.Cell(nil, t); e != nil {
+		fmt.Println("cell error:", e, t)
+	}
 	m.pdf.Br(fontSize * m.lineSpacing)
 	m.height += fontSize * m.lineSpacing
 }
 
 func (m *pdfBook) writeText(t string, fontSize float64) {
 	t = `　　` + t
+	for index := 0; ; {
+		r, length := utf8.DecodeRuneInString(t[index:])
+		if r == utf8.RuneError {
+			break
+		}
+		if length == 1 && !unicode.IsPrint(rune(t[index])) {
+			t = t[:index] + t[index+1:]
+			continue
+		}
+		index += length
+	}
+
+	if idx := strings.Index(t, "\n"); idx >= 0 {
+		fmt.Println("found line break initially", t)
+	}
 	count := 0
 	index := 0
 	for {
