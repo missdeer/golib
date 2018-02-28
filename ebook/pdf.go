@@ -268,7 +268,6 @@ func (m *pdfBook) newChapter() {
 
 // AppendContent append book content
 func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string) {
-	textLineCount = 0
 	m.newChapter()
 	if m.height+m.titleFontSize*m.lineSpacing > m.contentHeight {
 		m.newPage()
@@ -316,12 +315,7 @@ func (m *pdfBook) writeCover() {
 	m.writeText(time.Now().Format(time.RFC3339), float64(subtitleOnCoverFontSize))
 }
 
-var textLineCount = 0
-
 func (m *pdfBook) writeTextLine(t string, fontSize float64) {
-	if idx := strings.Index(t, "\n"); idx >= 0 {
-		fmt.Println("found line break finally", t)
-	}
 	if e := m.pdf.Cell(nil, t); e != nil {
 		fmt.Println("cell error:", e, t)
 	}
@@ -343,9 +337,6 @@ func (m *pdfBook) writeText(t string, fontSize float64) {
 		index += length
 	}
 
-	if idx := strings.Index(t, "\n"); idx >= 0 {
-		fmt.Println("found line break initially", t)
-	}
 	count := 0
 	index := 0
 	for {
