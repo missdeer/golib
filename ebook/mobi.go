@@ -4,10 +4,12 @@ package ebook
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -23,6 +25,7 @@ type mobiBook struct {
 	uid        int64
 	count      int
 	output     string
+	dirName    string
 	tocTmp     *os.File
 	contentTmp *os.File
 	navTmp     *os.File
@@ -212,22 +215,6 @@ func (m *mobiBook) SetLineSpacing(float64) {
 
 // Begin prepare book environment
 func (m *mobiBook) Begin() {
-	var err error
-	m.tocTmp, err = os.OpenFile(`toc.tmp`, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Println("opening file toc.tmp for writing failed ", err)
-		return
-	}
-	m.contentTmp, err = os.OpenFile(`content.tmp`, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Println("opening file content.tmp for writing failed ", err)
-		return
-	}
-	m.navTmp, err = os.OpenFile(`nav.tmp`, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Println("opening file nav.tmp for writing failed ", err)
-		return
-	}
 }
 
 // End generate files that kindlegen needs
@@ -240,9 +227,13 @@ func (m *mobiBook) End() {
 	m.writeTocNCX()
 	m.writeContentOPF()
 
-	os.Remove(`toc.tmp`)
-	os.Remove(`content.tmp`)
-	os.Remove(`nav.tmp`)
+	os.Remove(filepath.Join(m.dirName, `toc.tmp`))
+	os.Remove(filepath.Join(m.dirName, `content.tmp`))
+	os.Remove(filepath.Join(m.dirName, `nav.tmp`))
+
+	if err := os.Symlink("fonts", filepath.Join(m.dirName, "fonts")); err != nil {
+		log.Println(err)
+	}
 
 	kindlegen := os.Getenv(`KINDLEGEN_PATH`)
 	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
@@ -250,8 +241,70 @@ func (m *mobiBook) End() {
 	}
 
 	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
-		fmt.Println(`You need to run kindlegen utility to generate the final mobi file.`)
+		fmt.Println(`You need to run kindlegen utility to generate the final mobi file in directory`, m.dirName)
 	}
+
+	finalName := m.dirName
+
+	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
+		fmt.Printf("For example: kindlegen -c2 -o %s.mobi content.opf\n", finalName)
+		return
+	}
+	cmd := exec.Command(kindlegen, "-c2", "-o", finalName+".mobi", "content.opf")
+	cmd.Dir = m.dirName
+	fmt.Println("Invoking kindlegen to generate", filepath.Join(m.dirName, finalName+".mobi"), "...")
+	err := cmd.Run()
+	if b, _ := fsutil.FileExists(filepath.Join(m.dirName, finalName+".mobi")); err != nil && !b {
+		log.Println(err)
+		return
+	}
+
+	if m.output != "" {
+		from, err := os.Open(filepath.Join(m.dirName, finalName+".mobi"))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer from.Close()
+
+		to, err := os.OpenFile(m.output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer to.Close()
+
+		_, err = io.Copy(to, from)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		err = to.Sync()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		fmt.Println(m.output, "is generated.")
+		return
+	}
+	fmt.Println(filepath.Join(m.dirName, finalName+".mobi"), "is generated.")
+}
+
+// AppendContent append book content
+func (m *mobiBook) AppendContent(articleTitle, articleURL, articleContent string) {
+	m.tocTmp.WriteString(fmt.Sprintf(`<li><a href="#article_%d">%s</a></li>`, m.count, articleTitle))
+	m.contentTmp.WriteString(fmt.Sprintf(`<div id="article_%d" class="article"><h2 class="do_article_title"><a href="%s">%s</a></h2><div><p>%s</p></div></div>`,
+		m.count, articleURL, articleTitle, articleContent))
+	m.navTmp.WriteString(fmt.Sprintf(`<navPoint class="chapter" id="%d" playOrder="1"><navLabel><text>%s</text></navLabel><content src="content.html#article_%d" /></navPoint>`,
+		m.count, articleTitle, m.count))
+
+	m.count++
+}
+
+// SetTitle set book title
+func (m *mobiBook) SetTitle(title string) {
+	m.title = title
 
 	finalName := ""
 	t := m.title
@@ -277,39 +330,35 @@ func (m *mobiBook) End() {
 		}
 		t = t[size:]
 	}
+	m.dirName = finalName
+	os.Mkdir(m.dirName, 0755)
 
-	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
-		fmt.Printf("For example: kindlegen -c2 -o %s.mobi content.opf\n", finalName)
-	} else {
-		cmd := exec.Command(kindlegen, "-c2", "-o", finalName+".mobi", "content.opf")
-		fmt.Println("Invoking kindlegen to generate", finalName+".mobi...")
-		err := cmd.Run()
-		if b, _ := fsutil.FileExists(finalName + ".mobi"); err != nil && !b {
-			log.Println(err)
-		} else {
-			fmt.Println(finalName+".mobi", "is generated.")
+	var err error
+	if m.tocTmp == nil {
+		m.tocTmp, err = os.OpenFile(filepath.Join(m.dirName, `toc.tmp`), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			log.Println("opening file toc.tmp for writing failed ", err)
+			return
+		}
+	}
+	if m.contentTmp == nil {
+		m.contentTmp, err = os.OpenFile(filepath.Join(m.dirName, `content.tmp`), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			log.Println("opening file content.tmp for writing failed ", err)
+			return
+		}
+	}
+	if m.navTmp == nil {
+		m.navTmp, err = os.OpenFile(filepath.Join(m.dirName, `nav.tmp`), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			log.Println("opening file nav.tmp for writing failed ", err)
+			return
 		}
 	}
 }
 
-// AppendContent append book content
-func (m *mobiBook) AppendContent(articleTitle, articleURL, articleContent string) {
-	m.tocTmp.WriteString(fmt.Sprintf(`<li><a href="#article_%d">%s</a></li>`, m.count, articleTitle))
-	m.contentTmp.WriteString(fmt.Sprintf(`<div id="article_%d" class="article"><h2 class="do_article_title"><a href="%s">%s</a></h2><div><p>%s</p></div></div>`,
-		m.count, articleURL, articleTitle, articleContent))
-	m.navTmp.WriteString(fmt.Sprintf(`<navPoint class="chapter" id="%d" playOrder="1"><navLabel><text>%s</text></navLabel><content src="content.html#article_%d" /></navPoint>`,
-		m.count, articleTitle, m.count))
-
-	m.count++
-}
-
-// SetTitle set book title
-func (m *mobiBook) SetTitle(title string) {
-	m.title = title
-}
-
 func (m *mobiBook) writeContentHTML() {
-	tocTmp, err := os.OpenFile(`toc.tmp`, os.O_RDONLY, 0644)
+	tocTmp, err := os.OpenFile(filepath.Join(m.dirName, `toc.tmp`), os.O_RDONLY, 0644)
 	if err != nil {
 		log.Println("opening file toc.tmp for reading failed ", err)
 		return
@@ -321,7 +370,7 @@ func (m *mobiBook) writeContentHTML() {
 		return
 	}
 
-	contentTmp, err := os.OpenFile(`content.tmp`, os.O_RDONLY, 0644)
+	contentTmp, err := os.OpenFile(filepath.Join(m.dirName, `content.tmp`), os.O_RDONLY, 0644)
 	if err != nil {
 		log.Println("opening file content.tmp for reading failed ", err)
 		return
@@ -333,7 +382,7 @@ func (m *mobiBook) writeContentHTML() {
 		return
 	}
 
-	contentHTML, err := os.OpenFile(`content.html`, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	contentHTML, err := os.OpenFile(filepath.Join(m.dirName, `content.html`), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Println("opening file content.html for writing failed ", err)
 		return
@@ -345,7 +394,7 @@ func (m *mobiBook) writeContentHTML() {
 }
 
 func (m *mobiBook) writeContentOPF() {
-	contentOPF, err := os.OpenFile("content.opf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	contentOPF, err := os.OpenFile(filepath.Join(m.dirName, "content.opf"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Println("opening file content.opf for writing failed ", err)
 		return
@@ -356,7 +405,7 @@ func (m *mobiBook) writeContentOPF() {
 }
 
 func (m *mobiBook) writeTocNCX() {
-	tocNCX, err := os.OpenFile("toc.ncx", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	tocNCX, err := os.OpenFile(filepath.Join(m.dirName, "toc.ncx"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Println("opening file toc.ncx for writing failed ", err)
 		return
@@ -364,7 +413,7 @@ func (m *mobiBook) writeTocNCX() {
 
 	m.uid = time.Now().UnixNano()
 
-	navTmp, err := os.OpenFile(`nav.tmp`, os.O_RDONLY, 0644)
+	navTmp, err := os.OpenFile(filepath.Join(m.dirName, `nav.tmp`), os.O_RDONLY, 0644)
 	if err != nil {
 		log.Println("opening file nav.tmp for reading failed ", err)
 		return
