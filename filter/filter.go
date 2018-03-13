@@ -51,8 +51,8 @@ type F func(string) bool
 func Filter(f string) F {
 	ft, pattern := parse(f)
 	m := map[filterType]F{
-		contains:    func(t string) bool { return strings.Contains(pattern, t) },
-		notContains: func(t string) bool { return !strings.Contains(pattern, t) },
+		contains:    func(t string) bool { return strings.Contains(t, pattern) },
+		notContains: func(t string) bool { return !strings.Contains(t, pattern) },
 		equal:       func(t string) bool { return pattern == t },
 		notEqual:    func(t string) bool { return pattern != t },
 		suffix:      func(t string) bool { return strings.HasSuffix(t, pattern) },
