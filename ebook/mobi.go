@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -231,8 +232,13 @@ func (m *mobiBook) End() {
 	os.Remove(filepath.Join(m.dirName, `content.tmp`))
 	os.Remove(filepath.Join(m.dirName, `nav.tmp`))
 
-	if err := os.Symlink("fonts", filepath.Join(m.dirName, "fonts")); err != nil {
-		log.Println(err)
+	if runtime.GOOS == "windows" {
+		os.Mkdir(m.dirName+"\\fonts", 0755)
+		fsutil.CopyFile("fonts\\CustomFont.ttf", m.dirName+"\\fonts\\CustomFont.ttf")
+	} else {
+		if err := os.Symlink("fonts", filepath.Join(m.dirName, "fonts")); err != nil {
+			log.Println(err)
+		}
 	}
 
 	kindlegen := os.Getenv(`KINDLEGEN_PATH`)

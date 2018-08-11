@@ -3,6 +3,7 @@ package fsutil
 
 import (
 	"errors"
+	"io"
 	"os"
 )
 
@@ -19,4 +20,26 @@ func FileExists(path string) (bool, error) {
 		return false, nil
 	}
 	return false, err
+}
+
+// CopyFile copy src to dst
+func CopyFile(src, dst string) (bool, error) {
+	from, err := os.Open(src)
+	if err != nil {
+		return false, err
+	}
+	defer from.Close()
+
+	to, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return false, err
+	}
+	defer to.Close()
+
+	_, err = io.Copy(to, from)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
