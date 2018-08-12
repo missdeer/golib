@@ -22,14 +22,15 @@ import (
 
 // Mobi generate files that used to make a mobi file by kindlegen
 type mobiBook struct {
-	title      string
-	uid        int64
-	count      int
-	output     string
-	dirName    string
-	tocTmp     *os.File
-	contentTmp *os.File
-	navTmp     *os.File
+	title        string
+	uid          int64
+	count        int
+	output       string
+	dirName      string
+	fontFilePath string
+	tocTmp       *os.File
+	contentTmp   *os.File
+	navTmp       *os.File
 }
 
 var (
@@ -206,6 +207,7 @@ func (m *mobiBook) SetFontSize(titleFontSize int, contentFontSize int) {
 
 // SetFontFile set custom font file
 func (m *mobiBook) SetFontFile(file string) {
+	m.fontFilePath = file
 	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFontFile%", file, -1)
 }
 
@@ -232,11 +234,13 @@ func (m *mobiBook) End() {
 	os.Remove(filepath.Join(m.dirName, `content.tmp`))
 	os.Remove(filepath.Join(m.dirName, `nav.tmp`))
 
+	os.Mkdir(filepath.Join(m.dirName, "fonts"), 0755)
 	if runtime.GOOS == "windows" {
-		os.Mkdir(m.dirName+"\\fonts", 0755)
-		fsutil.CopyFile("fonts\\CustomFont.ttf", m.dirName+"\\fonts\\CustomFont.ttf")
+		if _, err := fsutil.CopyFile(m.fontFilePath, m.dirName+"\\fonts\\CustomFont.ttf"); err != nil {
+			log.Println(err)
+		}
 	} else {
-		if err := os.Symlink("fonts", filepath.Join(m.dirName, "fonts")); err != nil {
+		if err := os.Symlink(m.fontFilePath, filepath.Join(m.dirName, "fonts", "CustomFont.ttf")); err != nil {
 			log.Println(err)
 		}
 	}
