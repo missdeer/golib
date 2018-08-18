@@ -208,7 +208,7 @@ func (m *mobiBook) SetFontSize(titleFontSize int, contentFontSize int) {
 // SetFontFile set custom font file
 func (m *mobiBook) SetFontFile(file string) {
 	m.fontFilePath = file
-	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFontFile%", file, -1)
+	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFontFile%", filepath.ToSlash(file), -1)
 }
 
 // SetLineSpacing dummy funciton for interface
@@ -236,7 +236,7 @@ func (m *mobiBook) End() {
 
 	os.Mkdir(filepath.Join(m.dirName, "fonts"), 0755)
 	if runtime.GOOS == "windows" {
-		if _, err := fsutil.CopyFile(m.fontFilePath, m.dirName+"\\fonts\\CustomFont.ttf"); err != nil {
+		if _, err := fsutil.CopyFile(m.fontFilePath, filepath.Join(m.dirName, "fonts", "CustomFont.ttf")); err != nil {
 			log.Println(err)
 		}
 	} else {
