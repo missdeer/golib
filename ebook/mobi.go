@@ -251,6 +251,12 @@ func (m *mobiBook) End() {
 	}
 
 	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
+		if dir, err := filepath.Abs(filepath.Dir(os.Args[0])); err == nil {
+			kindlegen = filepath.Join(dir, `kindlegen`)
+		}
+	}
+
+	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
 		fmt.Println(`You need to run kindlegen utility to generate the final mobi file in directory`, m.dirName)
 	}
 
