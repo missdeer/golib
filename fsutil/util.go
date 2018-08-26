@@ -7,6 +7,16 @@ import (
 	"os"
 )
 
+// IsDir check if a path is a directory
+func IsDir(pth string) (bool, error) {
+	fi, err := os.Stat(pth)
+	if err != nil {
+		return false, err
+	}
+
+	return fi.IsDir(), nil
+}
+
 // FileExists check if the given file exists
 func FileExists(path string) (bool, error) {
 	stat, err := os.Stat(path)
