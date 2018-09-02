@@ -240,7 +240,17 @@ func (m *mobiBook) End() {
 			log.Println(err)
 		}
 	} else {
-		if err := os.Symlink(m.fontFilePath, filepath.Join(m.dirName, "fonts", "CustomFont.ttf")); err != nil {
+		var err error
+		fp := m.fontFilePath
+		if !filepath.IsAbs(fp) {
+			fp, err = filepath.Abs(m.fontFilePath)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+
+		err = os.Symlink(fp, filepath.Join(m.dirName, "fonts", "CustomFont.ttf"))
+		if err != nil {
 			log.Println(err)
 		}
 	}
