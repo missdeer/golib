@@ -11,7 +11,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/golang/freetype/truetype"
-	"github.com/missdeer/gopdf"
+	"github.com/signintech/gopdf"
 )
 
 // Pdf generate PDF file
