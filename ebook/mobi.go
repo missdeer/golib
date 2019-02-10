@@ -207,6 +207,11 @@ func (m *mobiBook) SetFontSize(titleFontSize int, contentFontSize int) {
 
 // SetFontFile set custom font file
 func (m *mobiBook) SetFontFile(file string) {
+	if b, e := fsutil.FileExists(file); e != nil || !b {
+		contentHTMLTemplate = strings.Replace(contentHTMLTemplate, `font-family: "CustomFont";`, "", -1)
+		contentHTMLTemplate = strings.Replace(contentHTMLTemplate, `src: url(%CustomFontFile%);`, "", -1)
+		return
+	}
 	m.fontFilePath = file
 	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFontFile%", filepath.ToSlash(file), -1)
 }
