@@ -40,10 +40,7 @@ var (
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 		<title>%s</title>
 		<style type="text/css">
-		@font-face{
-			font-family: "CustomFont";
-			src: url(%CustomFontFile%);
-		}
+		@font-face{	font-family: "CustomFont";	src: url(fonts/CustomFont.ttf);	}
 		body{
 			font-family: "CustomFont";
 			font-size: 1.2em;
@@ -207,13 +204,7 @@ func (m *mobiBook) SetFontSize(titleFontSize int, contentFontSize int) {
 
 // SetFontFile set custom font file
 func (m *mobiBook) SetFontFile(file string) {
-	if b, e := fsutil.FileExists(file); e != nil || !b {
-		contentHTMLTemplate = strings.Replace(contentHTMLTemplate, `font-family: "CustomFont";`, "", -1)
-		contentHTMLTemplate = strings.Replace(contentHTMLTemplate, `src: url(%CustomFontFile%);`, "", -1)
-		return
-	}
 	m.fontFilePath = file
-	contentHTMLTemplate = strings.Replace(contentHTMLTemplate, "%CustomFontFile%", filepath.ToSlash(file), -1)
 }
 
 // SetLineSpacing dummy funciton for interface
@@ -223,6 +214,11 @@ func (m *mobiBook) SetLineSpacing(float64) {
 
 // Begin prepare book environment
 func (m *mobiBook) Begin() {
+	if b, e := fsutil.FileExists(m.fontFilePath); e != nil || !b {
+		contentHTMLTemplate = strings.Replace(contentHTMLTemplate, `@font-face{	font-family: "CustomFont";	src: url(fonts/CustomFont.ttf);	}";`, "", -1)
+		contentHTMLTemplate = strings.Replace(contentHTMLTemplate, `font-family: "CustomFont";`, "", -1)
+		return
+	}
 }
 
 // End generate files that kindlegen needs
@@ -239,24 +235,26 @@ func (m *mobiBook) End() {
 	os.Remove(filepath.Join(m.dirName, `content.tmp`))
 	os.Remove(filepath.Join(m.dirName, `nav.tmp`))
 
-	os.Mkdir(filepath.Join(m.dirName, "fonts"), 0755)
-	if runtime.GOOS == "windows" {
-		if _, err := fsutil.CopyFile(m.fontFilePath, filepath.Join(m.dirName, "fonts", "CustomFont.ttf")); err != nil {
-			log.Println(err)
-		}
-	} else {
-		var err error
-		fp := m.fontFilePath
-		if !filepath.IsAbs(fp) {
-			fp, err = filepath.Abs(m.fontFilePath)
+	if b, e := fsutil.FileExists(m.fontFilePath); e == nil && b {
+		os.Mkdir(filepath.Join(m.dirName, "fonts"), 0755)
+		if runtime.GOOS == "windows" {
+			if _, err := fsutil.CopyFile(m.fontFilePath, filepath.Join(m.dirName, "fonts", "CustomFont.ttf")); err != nil {
+				log.Println(err)
+			}
+		} else {
+			var err error
+			fp := m.fontFilePath
+			if !filepath.IsAbs(fp) {
+				fp, err = filepath.Abs(m.fontFilePath)
+				if err != nil {
+					log.Println(err)
+				}
+			}
+
+			err = os.Symlink(fp, filepath.Join(m.dirName, "fonts", "CustomFont.ttf"))
 			if err != nil {
 				log.Println(err)
 			}
-		}
-
-		err = os.Symlink(fp, filepath.Join(m.dirName, "fonts", "CustomFont.ttf"))
-		if err != nil {
-			log.Println(err)
 		}
 	}
 
