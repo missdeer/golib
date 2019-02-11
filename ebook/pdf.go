@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang/freetype/truetype"
 	"github.com/signintech/gopdf"
+	"github.com/signintech/gopdf/fontmaker/core"
 )
 
 // Pdf generate PDF file
@@ -90,6 +91,22 @@ func (m *pdfBook) SetFontFile(file string) {
 	}
 	m.fontFamily = font.Name(truetype.NameIDFontFamily)
 	m.fontFamily = ""
+
+	// calculate Cap Height
+	var parser core.TTFParser
+	err = parser.Parse(m.fontFile)
+	if err != nil {
+		log.Print("can't parse TTF font", err)
+		return
+	}
+
+	//Measure Height
+	//get  CapHeight (https://en.wikipedia.org/wiki/Cap_height)
+	capHeight := float64(float64(parser.CapHeight()) * 1000.00 / float64(parser.UnitsPerEm()))
+	log.Println(m.lineSpacing, capHeight/1000)
+	if m.lineSpacing*1000 < capHeight {
+		m.lineSpacing = capHeight / 1000
+	}
 }
 
 // SetMargins dummy funciton for interface
@@ -202,10 +219,10 @@ func (m *pdfBook) End() {
 func (m *pdfBook) endBook() {
 	m.pdf.SetInfo(gopdf.PdfInfo{
 		Title:        m.title,
-		Author:       `GetNovel用户制作成PDF，并非小说原作者`,
-		Creator:      `GetNovel，仅限个人研究学习，对其造成的所有后果，软件作者不负任何责任`,
-		Producer:     `GetNovel，仅限个人研究学习，对其造成的所有后果，软件作者不负任何责任`,
-		Subject:      m.title + `：不费脑子的适合电子书设备（如Kindle DXG）看的网络小说`,
+		Author:       `golib/ebook/pdf 用户制作成PDF，并非一定是作品原作者`,
+		Creator:      `golib/ebook/pdf，仅限个人研究学习，对其造成的所有后果，软件/库作者不承担任何责任`,
+		Producer:     `golib/ebook/pdf，仅限个人研究学习，对其造成的所有后果，软件/库作者不承担任何责任`,
+		Subject:      m.title,
 		CreationDate: time.Now(),
 	})
 	if m.pagesPerFile > 0 || m.chaptersPerFile > 0 {
