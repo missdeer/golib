@@ -172,6 +172,9 @@ func (m *pdfBook) SetPageType(pageType string) {
 		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
 		m.SetMargins(72, 89.9)
 		m.SetFontSize(16, 12)
+	case "mobile":
+		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
+		m.SetFontSize(32, 28)
 	default:
 		// work as A4 paper size
 		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
