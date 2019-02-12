@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -103,7 +104,6 @@ func (m *pdfBook) SetFontFile(file string) {
 	//Measure Height
 	//get  CapHeight (https://en.wikipedia.org/wiki/Cap_height)
 	capHeight := float64(float64(parser.CapHeight()) * 1000.00 / float64(parser.UnitsPerEm()))
-	log.Println(m.lineSpacing, capHeight/1000)
 	if m.lineSpacing*1000 < capHeight {
 		m.lineSpacing = capHeight / 1000
 	}
@@ -290,6 +290,7 @@ func (m *pdfBook) newChapter() {
 func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string) {
 	m.newChapter()
 	if m.height+m.titleFontSize*m.lineSpacing > m.contentHeight {
+		m.writePageNumber()
 		m.newPage()
 	}
 	m.pdf.SetFont(m.fontFamily, "", int(m.titleFontSize))
@@ -323,15 +324,22 @@ func (m *pdfBook) SetTitle(title string) {
 	m.newPage()
 }
 
+func (m *pdfBook) writePageNumber() {
+	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize/2))
+	m.pdf.SetY(m.paperHeight - m.contentFontSize/2)
+	m.pdf.SetX(m.paperWidth / 2)
+	m.pdf.Cell(nil, strconv.Itoa(m.pages-1))
+}
+
 func (m *pdfBook) writeCover() {
 	titleOnCoverFontSize := 48
-	m.pdf.SetFont(m.fontFamily, "", titleOnCoverFontSize)
+	m.pdf.SetFont(m.fontFamily, "B", titleOnCoverFontSize)
 	m.pdf.SetY(m.contentHeight/2 - float64(titleOnCoverFontSize))
 	m.pdf.SetX(m.leftMargin)
 	m.writeText(m.title, float64(titleOnCoverFontSize))
 	m.pdf.Br(float64(titleOnCoverFontSize) * m.lineSpacing)
 	subtitleOnCoverFontSize := 20
-	m.pdf.SetFont(m.fontFamily, "", subtitleOnCoverFontSize)
+	m.pdf.SetFont(m.fontFamily, "I", subtitleOnCoverFontSize)
 	m.writeText(time.Now().Format(time.RFC3339), float64(subtitleOnCoverFontSize))
 }
 
@@ -367,6 +375,7 @@ func (m *pdfBook) writeText(t string, fontSize float64) {
 		count += length
 		if width, _ := m.pdf.MeasureTextWidth(t[:count]); width > m.contentWidth {
 			if m.height+m.contentFontSize*m.lineSpacing > m.contentHeight {
+				m.writePageNumber()
 				m.newPage()
 			}
 			count -= length
@@ -380,6 +389,7 @@ func (m *pdfBook) writeText(t string, fontSize float64) {
 	}
 	if len(t) > 0 {
 		if m.height+m.contentFontSize*m.lineSpacing > m.contentHeight {
+			m.writePageNumber()
 			m.newPage()
 		}
 		m.writeTextLine(t, m.contentFontSize)
