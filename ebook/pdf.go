@@ -109,7 +109,7 @@ func (m *pdfBook) SetFontFile(file string) {
 	}
 }
 
-// SetMargins dummy funciton for interface
+// SetMargins set page margins
 func (m *pdfBook) SetMargins(left float64, top float64) {
 	m.leftMargin = left
 	m.topMargin = top
@@ -117,73 +117,25 @@ func (m *pdfBook) SetMargins(left float64, top float64) {
 	m.contentHeight = m.paperHeight - m.topMargin*2
 }
 
+// SetPageSize set page size
+func (m *pdfBook) SetPageSize(width float64, height float64) {
+	// https://www.cl.cam.ac.uk/~mgk25/iso-paper-ps.txt
+	m.config = &gopdf.Config{
+		PageSize: gopdf.Rect{
+			W: width,
+			H: height,
+		},
+		Unit: "mm",
+	}
+	m.paperWidth = width
+	m.paperHeight = height
+	m.contentWidth = width - m.leftMargin*2
+	m.contentHeight = height - m.topMargin*2
+}
+
 // SetPageType dummy funciton for interface
 func (m *pdfBook) SetPageType(pageType string) {
-	// https://www.cl.cam.ac.uk/~mgk25/iso-paper-ps.txt
-	switch pageType {
-	case "a0":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 2384, H: 3370}}
-	case "a1":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 1684, H: 2384}}
-	case "a2":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 1191, H: 1684}}
-	case "a3":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 842, H: 1191}}
-	case "a4", "dxg", "10inch":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
-	case "a5":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 420, H: 595}}
-	case "a6":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 298, H: 420}}
-	case "b0":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 2835, H: 4008}}
-	case "b1":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 2004, H: 2835}}
-	case "b2":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 1417, H: 2004}}
-	case "b3":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 1001, H: 1417}}
-	case "b4":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 709, H: 1001}}
-	case "b5":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 499, H: 709}}
-	case "b6":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 354, H: 499}}
-	case "c0":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 2599, H: 3677}}
-	case "c1":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 1837, H: 2599}}
-	case "c2":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 1298, H: 1837}}
-	case "c3":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 918, H: 1298}}
-	case "c4":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 649, H: 918}}
-	case "c5":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 459, H: 649}}
-	case "c6":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 323, H: 459}}
-	case "6inch":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 255.12, H: 331.65}} // 90 mm x 117 mm
-	case "7inch":
-		// FIXME
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 297.64, H: 386.93}}
-	case "pc":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
-		m.SetMargins(72, 89.9)
-		m.SetFontSize(16, 12)
-	case "mobile":
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
-		m.SetFontSize(32, 28)
-	default:
-		// work as A4 paper size
-		m.config = &gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}}
-	}
 	m.pageType = pageType
-	m.paperWidth = m.config.PageSize.W
-	m.paperHeight = m.config.PageSize.H
-	m.contentWidth = m.paperWidth - m.leftMargin*2
-	m.contentHeight = m.paperHeight - m.topMargin*2
 }
 
 // SetFontSize dummy funciton for interface

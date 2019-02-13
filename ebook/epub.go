@@ -105,6 +105,10 @@ func (m *epubBook) SetFontFile(file string) {
 	m.fontFile = file
 }
 
+// SetPageSize dummy funciton for interface
+func (m *epubBook) SetPageSize(width float64, height float64) {
+}
+
 // SetMargins dummy funciton for interface
 func (m *epubBook) SetMargins(left float64, top float64) {
 }

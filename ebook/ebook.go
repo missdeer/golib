@@ -9,6 +9,7 @@ type IBook interface {
 	AppendContent(string, string, string)
 	SetMargins(float64, float64)
 	SetPageType(string)
+	SetPageSize(float64, float64)
 	SetFontSize(int, int)
 	SetLineSpacing(float64)
 	SetFontFile(string)
