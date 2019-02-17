@@ -91,7 +91,6 @@ func (m *pdfBook) SetFontFile(file string) {
 		return
 	}
 	m.fontFamily = font.Name(truetype.NameIDFontFamily)
-	m.fontFamily = ""
 
 	// calculate Cap Height
 	var parser core.TTFParser
@@ -158,9 +157,8 @@ func (m *pdfBook) beginBook() {
 	m.pdf.SetTopMargin(m.topMargin)
 
 	if m.fontFile != "" {
-		err := m.pdf.AddTTFFont(m.fontFamily, m.fontFile)
-		if err != nil {
-			log.Print(err.Error())
+		if err := m.pdf.AddTTFFont(m.fontFamily, m.fontFile); err != nil {
+			log.Println("embed font failed", err)
 			return
 		}
 	}
@@ -221,7 +219,9 @@ func (m *pdfBook) newPage() {
 	m.pdf.AddPage()
 	m.pages++
 	m.height = 0
-	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize))
+	if err := m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize)); err != nil {
+		log.Println("set new page font failed", err)
+	}
 }
 
 func (m *pdfBook) newChapter() {
@@ -245,9 +245,13 @@ func (m *pdfBook) AppendContent(articleTitle, articleURL, articleContent string)
 		m.writePageNumber()
 		m.newPage()
 	}
-	m.pdf.SetFont(m.fontFamily, "", int(m.titleFontSize))
+	if err := m.pdf.SetFont(m.fontFamily, "", int(m.titleFontSize)); err != nil {
+		log.Println("set title font failed", err)
+	}
 	m.writeTextLine(articleTitle, m.titleFontSize)
-	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize))
+	if err := m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize)); err != nil {
+		log.Println("set content font failed", err)
+	}
 
 	c := m.preprocessContent(articleContent)
 	lineBreak := "\n"
@@ -277,21 +281,29 @@ func (m *pdfBook) SetTitle(title string) {
 }
 
 func (m *pdfBook) writePageNumber() {
-	m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize/2))
+	if err := m.pdf.SetFont(m.fontFamily, "", int(m.contentFontSize/2)); err != nil {
+		log.Println("set page number font failed", err)
+	}
 	m.pdf.SetY(m.paperHeight - m.contentFontSize/2)
 	m.pdf.SetX(m.paperWidth / 2)
-	m.pdf.Cell(nil, strconv.Itoa(m.pages-1))
+	if err := m.pdf.Cell(nil, strconv.Itoa(m.pages-1)); err != nil {
+		log.Println("cell failed", err)
+	}
 }
 
 func (m *pdfBook) writeCover() {
 	titleOnCoverFontSize := 48
-	m.pdf.SetFont(m.fontFamily, "B", titleOnCoverFontSize)
+	if err := m.pdf.SetFont(m.fontFamily, "", titleOnCoverFontSize); err != nil {
+		log.Println("set title font on cover failed", err)
+	}
 	m.pdf.SetY(m.contentHeight/2 - float64(titleOnCoverFontSize))
 	m.pdf.SetX(m.leftMargin)
 	m.writeText(m.title, float64(titleOnCoverFontSize))
 	m.pdf.Br(float64(titleOnCoverFontSize) * m.lineSpacing)
 	subtitleOnCoverFontSize := 20
-	m.pdf.SetFont(m.fontFamily, "I", subtitleOnCoverFontSize)
+	if err := m.pdf.SetFont(m.fontFamily, "", subtitleOnCoverFontSize); err != nil {
+		log.Println("set subtitle font on cover failed", err)
+	}
 	m.writeText(time.Now().Format(time.RFC3339), float64(subtitleOnCoverFontSize))
 }
 
