@@ -309,7 +309,7 @@ func (m *pdfBook) writeCover() {
 
 func (m *pdfBook) writeTextLine(t string, fontSize float64) {
 	if e := m.pdf.Cell(nil, t); e != nil {
-		fmt.Println("cell error:", e, t)
+		log.Println("write text line cell error:", e, t)
 	}
 	m.pdf.Br(fontSize * m.lineSpacing)
 	m.height += fontSize * m.lineSpacing
