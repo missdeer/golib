@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 	"unicode/utf8"
 
 	"github.com/golang/freetype/truetype"
@@ -40,6 +39,7 @@ type pdfBook struct {
 	chaptersPerFile int
 	chapters        int
 	splitIndex      int
+	ttf             *truetype.Font
 }
 
 // Output set the output file path
@@ -85,12 +85,12 @@ func (m *pdfBook) SetFontFile(file string) {
 		return
 	}
 
-	font, err := truetype.Parse(fontContent)
+	m.ttf, err = truetype.Parse(fontContent)
 	if err != nil {
 		log.Fatalln("can't parse TTF font", err)
 		return
 	}
-	m.fontFamily = font.Name(truetype.NameIDFontFamily)
+	m.fontFamily = m.ttf.Name(truetype.NameIDFontFamily)
 
 	// calculate Cap Height
 	var parser core.TTFParser
@@ -316,14 +316,17 @@ func (m *pdfBook) writeTextLine(t string, fontSize float64) {
 }
 
 func (m *pdfBook) writeText(t string, fontSize float64) {
-	t = `　　` + t
-	for index := 0; ; {
+	t = `　　` + strings.Replace(t, "	", "", -1)
+	for index := 0; index < len(t); {
 		r, length := utf8.DecodeRuneInString(t[index:])
 		if r == utf8.RuneError {
-			break
-		}
-		if length == 1 && !unicode.IsPrint(rune(t[index])) {
+			//fmt.Println(t, r, index)
 			t = t[:index] + t[index+1:]
+			continue
+		}
+		if m.ttf.Index(r) == 0 {
+			//fmt.Println(t[index:index+length], r, length, m.ttf.Index(r))
+			t = t[:index] + t[index+length:]
 			continue
 		}
 		index += length
