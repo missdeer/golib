@@ -124,7 +124,7 @@ func (m *pdfBook) SetPageSize(width float64, height float64) {
 			W: width,
 			H: height,
 		},
-		Unit: "mm",
+		Unit: gopdf.Unit_MM,
 	}
 	m.paperWidth = width
 	m.paperHeight = height
