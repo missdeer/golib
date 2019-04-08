@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	epub "github.com/missdeer/go-epub"
+	epub "github.com/bmaupin/go-epub"
 )
 
 var (
