@@ -1,4 +1,4 @@
-module github.com/dfordsoft/golib
+module github.com/missdeer/golib
 
 go 1.12
 

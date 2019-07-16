@@ -15,7 +15,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/dfordsoft/golib/fsutil"
+	"github.com/missdeer/golib/fsutil"
 
 	pinyin "github.com/mozillazg/go-pinyin"
 )
