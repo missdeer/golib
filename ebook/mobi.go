@@ -16,8 +16,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/missdeer/golib/fsutil"
-
-	pinyin "github.com/mozillazg/go-pinyin"
+	"github.com/mozillazg/go-pinyin"
 )
 
 // Mobi generate files that used to make a mobi file by kindlegen

@@ -100,8 +100,8 @@ func (m *pdfBook) SetFontFile(file string) {
 		return
 	}
 
-	//Measure Height
-	//get  CapHeight (https://en.wikipedia.org/wiki/Cap_height)
+	// Measure Height
+	// get  CapHeight (https://en.wikipedia.org/wiki/Cap_height)
 	capHeight := float64(float64(parser.CapHeight()) * 1000.00 / float64(parser.UnitsPerEm()))
 	if m.lineSpacing*1000 < capHeight {
 		m.lineSpacing = capHeight / 1000
@@ -320,12 +320,12 @@ func (m *pdfBook) writeText(t string, fontSize float64) {
 	for index := 0; index < len(t); {
 		r, length := utf8.DecodeRuneInString(t[index:])
 		if r == utf8.RuneError {
-			//fmt.Println(t, r, index)
+			// fmt.Println(t, r, index)
 			t = t[:index] + t[index+1:]
 			continue
 		}
 		if m.ttf.Index(r) == 0 {
-			//fmt.Println(t[index:index+length], r, length, m.ttf.Index(r))
+			// fmt.Println(t[index:index+length], r, length, m.ttf.Index(r))
 			t = t[:index] + t[index+length:]
 			continue
 		}
