@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/idalin/govel/utils"
+	"github.com/missdeer/golib/httputil"
 	"github.com/patrickmn/go-cache"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -134,10 +134,10 @@ func (b *BookSource) SearchBook(title string) []*Book {
 	if b.searchMethod() == "post" {
 		data := strings.Split(searchUrl, "@")[1]
 		params := strings.Replace(data, "=searchKey", fmt.Sprintf("=%s", url.QueryEscape(title)), -1)
-		p, err = utils.PostPage(strings.Split(searchUrl, "@")[0], params)
+		p, err = httputil.PostPage(strings.Split(searchUrl, "@")[0], params)
 	} else {
 		log.Println(searchUrl)
-		p, err = utils.GetPage(searchUrl, b.HTTPUserAgent)
+		p, err = httputil.GetPage(searchUrl, b.HTTPUserAgent)
 	}
 
 	if err != nil {
@@ -168,17 +168,17 @@ func (b *BookSource) searchPage() int {
 
 func (b *BookSource) extractSearchResult(doc *goquery.Document) []*Book {
 	var srList []*Book
-	sel, str := utils.ParseRules(doc, b.RuleSearchList)
+	sel, str := ParseRules(doc, b.RuleSearchList)
 	if sel != nil {
 		sel.Each(func(i int, s *goquery.Selection) {
-			_, title := utils.ParseRules(s, b.RuleSearchName)
+			_, title := ParseRules(s, b.RuleSearchName)
 			if title != "" {
-				_, url := utils.ParseRules(s, b.RuleSearchNoteURL)
-				_, author := utils.ParseRules(s, b.RuleSearchAuthor)
-				_, kind := utils.ParseRules(s, b.RuleSearchKind)
-				_, cover := utils.ParseRules(s, b.RuleSearchCoverURL)
-				_, lastChapter := utils.ParseRules(s, b.RuleSearchLastChapter)
-				_, noteURL := utils.ParseRules(s, b.RuleSearchNoteURL)
+				_, url := ParseRules(s, b.RuleSearchNoteURL)
+				_, author := ParseRules(s, b.RuleSearchAuthor)
+				_, kind := ParseRules(s, b.RuleSearchKind)
+				_, cover := ParseRules(s, b.RuleSearchCoverURL)
+				_, lastChapter := ParseRules(s, b.RuleSearchLastChapter)
+				_, noteURL := ParseRules(s, b.RuleSearchNoteURL)
 				if strings.HasPrefix(url, "/") {
 					url = fmt.Sprintf("%s%s", b.BookSourceURL, url)
 				}

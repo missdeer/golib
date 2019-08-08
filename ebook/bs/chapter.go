@@ -7,7 +7,7 @@ import (
 	"net/url"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/idalin/govel/utils"
+	"github.com/missdeer/golib/httputil"
 )
 
 type Chapter struct {
@@ -34,7 +34,7 @@ func (c *Chapter) FromURL(chapterURL string) error {
 		return err
 	}
 	c.ChapterURL = chapterURL
-	c.BookSourceSite = utils.GetHostByURL(c.ChapterURL)
+	c.BookSourceSite = httputil.GetHostByURL(c.ChapterURL)
 	return nil
 }
 
@@ -46,7 +46,7 @@ func (c *Chapter) GetBookSource() *BookSource {
 		if c.ChapterURL == "" {
 			return nil
 		}
-		c.BookSourceSite = utils.GetHostByURL(c.ChapterURL)
+		c.BookSourceSite = httputil.GetHostByURL(c.ChapterURL)
 	}
 	if bsItem, ok := BSCache.Get(c.BookSourceSite); ok {
 		if bs, ok := bsItem.(BookSource); ok {
@@ -65,7 +65,7 @@ func (c *Chapter) getChapterPage() (*goquery.Document, error) {
 	}
 	bs := c.GetBookSource()
 	if c.ChapterURL != "" && bs != nil {
-		p, err := utils.GetPage(c.ChapterURL, c.GetBookSource().HTTPUserAgent)
+		p, err := httputil.GetPage(c.ChapterURL, c.GetBookSource().HTTPUserAgent)
 		if err == nil {
 			doc, err := goquery.NewDocumentFromReader(p)
 			if err == nil {
@@ -85,7 +85,7 @@ func (c *Chapter) GetContent() string {
 	}
 	doc, err := c.getChapterPage()
 	if err == nil {
-		_, content := utils.ParseRules(doc, c.BookSourceInst.RuleBookContent)
+		_, content := ParseRules(doc, c.BookSourceInst.RuleBookContent)
 		if content != "" {
 			// re := regexp.MustCompile("(\b)+")
 			// content = re.ReplaceAllString(content, "\n    ")

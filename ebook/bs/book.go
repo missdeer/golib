@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/idalin/govel/utils"
+	"github.com/missdeer/golib/httputil"
 )
 
 type Book struct {
@@ -44,7 +44,7 @@ func (b *Book) GetBookSource() *BookSource {
 		if b.NoteURL == "" {
 			return nil
 		}
-		b.Tag = utils.GetHostByURL(b.NoteURL)
+		b.Tag = httputil.GetHostByURL(b.NoteURL)
 	}
 	if bsItem, ok := BSCache.Get(b.Tag); ok {
 		if bs, ok := bsItem.(BookSource); ok {
@@ -67,7 +67,7 @@ func (b *Book) FromURL(bookURL string) error {
 		return err
 	}
 	b.NoteURL = bookURL
-	b.Tag = utils.GetHostByURL(b.NoteURL)
+	b.Tag = httputil.GetHostByURL(b.NoteURL)
 	b.GetAuthor()
 	b.GetIntroduce()
 	return nil
@@ -88,7 +88,7 @@ func (b *Book) getBookPage() (*goquery.Document, error) {
 	}
 	bs := b.GetBookSource()
 	if b.NoteURL != "" && bs != nil {
-		p, err := utils.GetPage(b.NoteURL, b.GetBookSource().HTTPUserAgent)
+		p, err := httputil.GetPage(b.NoteURL, b.GetBookSource().HTTPUserAgent)
 		if err == nil {
 			doc, err := goquery.NewDocumentFromReader(p)
 			if err == nil {
@@ -107,7 +107,7 @@ func (b *Book) GetChapterURL() string {
 	}
 	doc, err := b.getBookPage()
 	if err == nil {
-		_, chapterURL := utils.ParseRules(doc, b.BookSourceInst.RuleChapterURL)
+		_, chapterURL := ParseRules(doc, b.BookSourceInst.RuleChapterURL)
 		if chapterURL != "" {
 			log.Printf("chapter url is: %s", chapterURL)
 			b.ChapterURL = chapterURL
@@ -129,7 +129,7 @@ func (b *Book) UpdateChapterList(startFrom int) error {
 	var err error
 	bs := b.GetBookSource()
 	// if b.ChapterURL != "" && bs != nil {
-	p, err := utils.GetPage(b.GetChapterURL(), b.GetBookSource().HTTPUserAgent)
+	p, err := httputil.GetPage(b.GetChapterURL(), b.GetBookSource().HTTPUserAgent)
 	log.Printf("%s chapterlist url is:%s .", b.Name, b.ChapterURL)
 	if err != nil {
 		log.Printf("error while getting chapter list page: %s", err.Error())
@@ -146,14 +146,14 @@ func (b *Book) UpdateChapterList(startFrom int) error {
 			return err
 		}
 	}
-	sel, _ := utils.ParseRules(doc, b.BookSourceInst.RuleChapterList)
+	sel, _ := ParseRules(doc, b.BookSourceInst.RuleChapterList)
 	if sel != nil {
 		sel.Each(func(i int, s *goquery.Selection) {
 			if i < startFrom {
 				return
 			}
-			_, name := utils.ParseRules(s, b.BookSourceInst.RuleChapterName)
-			_, url := utils.ParseRules(s, b.BookSourceInst.RuleContentURL)
+			_, name := ParseRules(s, b.BookSourceInst.RuleChapterName)
+			_, url := ParseRules(s, b.BookSourceInst.RuleContentURL)
 			if strings.HasPrefix(url, "/") {
 				url = fmt.Sprintf("%s%s", b.BookSourceInst.BookSourceURL, url)
 			}
@@ -174,7 +174,7 @@ func (b *Book) GetName() string {
 	}
 	doc, err := b.getBookPage()
 	if err == nil {
-		_, title := utils.ParseRules(doc, b.BookSourceInst.RuleBookName)
+		_, title := ParseRules(doc, b.BookSourceInst.RuleBookName)
 		if title != "" {
 			b.Name = title
 		}
@@ -190,7 +190,7 @@ func (b *Book) GetIntroduce() string {
 	}
 	doc, err := b.getBookPage()
 	if err == nil {
-		_, intro := utils.ParseRules(doc, b.BookSourceInst.RuleIntroduce)
+		_, intro := ParseRules(doc, b.BookSourceInst.RuleIntroduce)
 		if intro != "" {
 			b.Introduce = intro
 		}
@@ -205,7 +205,7 @@ func (b *Book) GetAuthor() string {
 
 		doc, err := b.getBookPage()
 		if err == nil {
-			_, intro := utils.ParseRules(doc, b.BookSourceInst.RuleBookAuthor)
+			_, intro := ParseRules(doc, b.BookSourceInst.RuleBookAuthor)
 			if intro != "" {
 				b.Author = intro
 			}
