@@ -18,9 +18,26 @@ import (
 	"golang.org/x/text/transform"
 )
 
-var BSCache *cache.Cache = cache.New(0, 0)
+var bsCache *cache.Cache = cache.New(0, 0)
 
 type SearchOutput map[string][]*Book
+
+func InitBS(fileName string) {
+	var bs []BookSource
+	bookSource, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	err = json.Unmarshal(bookSource, &bs)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for _, b := range bs {
+		bsCache.Add(b.BookSourceURL, b, 0)
+	}
+}
 
 func SortSearchOutput(so SearchOutput) []string {
 	sortedResult := make(map[string]int, len(so))
@@ -213,8 +230,8 @@ func SearchBooks(title string) SearchOutput {
 	c := make(chan *Book, 10)
 	result := make(SearchOutput)
 	go func() {
-		for i, _ := range BSCache.Items() {
-			if b, ok := BSCache.Get(i); ok {
+		for i, _ := range bsCache.Items() {
+			if b, ok := bsCache.Get(i); ok {
 				bs, ok := b.(BookSource)
 				if ok {
 					searchResult := bs.SearchBook(title)

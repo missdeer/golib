@@ -46,13 +46,11 @@ func (b *Book) GetBookSource() *BookSource {
 		}
 		b.Tag = httputil.GetHostByURL(b.NoteURL)
 	}
-	if bsItem, ok := BSCache.Get(b.Tag); ok {
+	if bsItem, ok := bsCache.Get(b.Tag); ok {
 		if bs, ok := bsItem.(BookSource); ok {
 			b.BookSourceInst = &bs
 			b.Origin = bs.BookSourceName
 			return &bs
-		} else {
-			return nil
 		}
 	}
 	return nil
@@ -62,8 +60,7 @@ func (b *Book) FromURL(bookURL string) error {
 	if bookURL == "" {
 		return errors.New("no url.")
 	}
-	_, err := url.ParseRequestURI(bookURL)
-	if err != nil {
+	if _, err := url.ParseRequestURI(bookURL); err != nil {
 		return err
 	}
 	b.NoteURL = bookURL
@@ -75,7 +72,7 @@ func (b *Book) FromURL(bookURL string) error {
 
 func (b *Book) FromCache(bookPath string) error {
 	if _, err := os.Stat(bookPath); os.IsNotExist(err) {
-		return errors.New(fmt.Sprintf("book path: %s not exists.", bookPath))
+		return fmt.Errorf("book path: %s not exists.", bookPath)
 	}
 	bookName := filepath.Base(bookPath)
 	fmt.Printf("book name is: %s.\n", bookName)
