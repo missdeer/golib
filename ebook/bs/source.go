@@ -20,7 +20,7 @@ import (
 
 var bsCache *cache.Cache = cache.New(0, 0)
 
-type SearchOutput map[string][]*Book
+type searchOutput map[string][]*Book
 
 func InitBS(fileName string) {
 	var bs []BookSource
@@ -39,7 +39,7 @@ func InitBS(fileName string) {
 	}
 }
 
-func SortSearchOutput(so SearchOutput) []string {
+func SortSearchOutput(so searchOutput) []string {
 	sortedResult := make(map[string]int, len(so))
 	// var keys = make([]int, len(so))
 	var newKeys = make([]string, len(so))
@@ -128,12 +128,12 @@ func (b *BookSource) SearchBook(title string) []*Book {
 	if b.RuleSearchURL == "" || b.RuleSearchURL == "-" {
 		return nil
 	}
-	searchUrl := b.RuleSearchURL
+	searchURL := b.RuleSearchURL
 
 	// Process encoding transform
-	if strings.Contains(searchUrl, "|char") {
-		charParam := strings.Split(searchUrl, "|")[1]
-		searchUrl = strings.Replace(searchUrl, fmt.Sprintf("|%s", charParam), "", -1)
+	if strings.Contains(searchURL, "|char") {
+		charParam := strings.Split(searchURL, "|")[1]
+		searchURL = strings.Replace(searchURL, fmt.Sprintf("|%s", charParam), "", -1)
 		charEncoding := strings.Split(charParam, "=")[1]
 		charEncoding = strings.ToLower(charEncoding)
 		if charEncoding == "gbk" || charEncoding == "gb2312" || charEncoding == "gb18030" {
@@ -144,17 +144,17 @@ func (b *BookSource) SearchBook(title string) []*Book {
 
 	var err error
 	var p io.Reader
-	searchUrl = strings.Replace(searchUrl, "=searchKey", fmt.Sprintf("=%s", url.QueryEscape(title)), -1)
-	searchUrl = strings.Replace(searchUrl, "searchPage-1", "0", -1)
-	searchUrl = strings.Replace(searchUrl, "searchPage", "1", -1)
+	searchURL = strings.Replace(searchURL, "=searchKey", fmt.Sprintf("=%s", url.QueryEscape(title)), -1)
+	searchURL = strings.Replace(searchURL, "searchPage-1", "0", -1)
+	searchURL = strings.Replace(searchURL, "searchPage", "1", -1)
 	// if searchUrl contains "@", searchKey should be post, not get.
 	if b.searchMethod() == "post" {
-		data := strings.Split(searchUrl, "@")[1]
+		data := strings.Split(searchURL, "@")[1]
 		params := strings.Replace(data, "=searchKey", fmt.Sprintf("=%s", url.QueryEscape(title)), -1)
-		p, err = httputil.PostPage(strings.Split(searchUrl, "@")[0], params)
+		p, err = httputil.PostPage(strings.Split(searchURL, "@")[0], params)
 	} else {
-		log.Println(searchUrl)
-		p, err = httputil.GetPage(searchUrl, b.HTTPUserAgent)
+		log.Println(searchURL)
+		p, err = httputil.GetPage(searchURL, b.HTTPUserAgent)
 	}
 
 	if err != nil {
@@ -226,11 +226,11 @@ func (b *BookSource) extractSearchResult(doc *goquery.Document) []*Book {
 	return srList
 }
 
-func SearchBooks(title string) SearchOutput {
+func SearchBooks(title string) searchOutput {
 	c := make(chan *Book, 10)
-	result := make(SearchOutput)
+	result := make(searchOutput)
 	go func() {
-		for i, _ := range bsCache.Items() {
+		for i := range bsCache.Items() {
 			if b, ok := bsCache.Get(i); ok {
 				bs, ok := b.(BookSource)
 				if ok {
@@ -259,8 +259,8 @@ func SearchBooks(title string) SearchOutput {
 	}
 	for _, key := range SortSearchOutput(result) {
 		if key != "" {
-			resultJson, _ := json.MarshalIndent(result[key], "", "    ")
-			log.Printf("%s:\n %s\n", key, resultJson)
+			resultJSON, _ := json.MarshalIndent(result[key], "", "    ")
+			log.Printf("%s:\n %s\n", key, resultJSON)
 		}
 	}
 	return result

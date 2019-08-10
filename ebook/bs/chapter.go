@@ -52,8 +52,6 @@ func (c *Chapter) GetBookSource() *BookSource {
 		if bs, ok := bsItem.(BookSource); ok {
 			c.BookSourceInst = &bs
 			return &bs
-		} else {
-			return nil
 		}
 	}
 	return nil
