@@ -19,7 +19,7 @@ import (
 	"github.com/mozillazg/go-pinyin"
 )
 
-// Mobi generate files that used to make a mobi file by kindlegen
+// mobiBook generate files that used to make a mobi file by kindlegen
 type mobiBook struct {
 	title        string
 	uid          int64
@@ -281,6 +281,9 @@ func (m *mobiBook) End() {
 	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
 		fmt.Printf("For example: kindlegen -dont_append_source -c0 -o %s.mobi content.opf\n", finalName)
 		return
+	}
+	if !filepath.IsAbs(kindlegen) {
+		kindlegen, _ = filepath.Abs(kindlegen)
 	}
 	cmd := exec.Command(kindlegen, "-dont_append_source", "-c0", "-o", finalName+".mobi", "content.opf")
 	cmd.Dir = m.dirName
