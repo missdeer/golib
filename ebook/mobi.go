@@ -279,13 +279,13 @@ func (m *mobiBook) End() {
 	finalName := m.dirName
 
 	if b, e := fsutil.FileExists(kindlegen); e != nil || !b {
-		fmt.Printf("For example: kindlegen -dont_append_source -c0 -o %s.mobi content.opf\n", finalName)
+		fmt.Printf("For example: kindlegen -dont_append_source -c2 -o %s.mobi content.opf\n", finalName)
 		return
 	}
 	if !filepath.IsAbs(kindlegen) {
 		kindlegen, _ = filepath.Abs(kindlegen)
 	}
-	cmd := exec.Command(kindlegen, "-dont_append_source", "-c0", "-o", finalName+".mobi", "content.opf")
+	cmd := exec.Command(kindlegen, "-dont_append_source", "-c2", "-o", finalName+".mobi", "content.opf")
 	cmd.Dir = m.dirName
 	fmt.Println("Invoking kindlegen to generate", filepath.Join(m.dirName, finalName+".mobi"), "...")
 	err := cmd.Run()
