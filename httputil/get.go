@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
+	"net/url"
 	"time"
 )
 
@@ -45,20 +45,13 @@ func GetPage(url, ua string) (io.Reader, error) {
 }
 
 // GetHostByURL get host by url
-func GetHostByURL(url string) string {
-	if url == "" {
-		return ""
+func GetHostByURL(u string) (host string) {
+	theURL, e := url.Parse(u)
+	if e != nil {
+		log.Println(e)
+		return
 	}
-	if strings.HasPrefix(url, "/") {
-		return ""
-	}
-	urlStrArray := strings.Split(url, "//")
-	if len(urlStrArray) != 2 {
-		return ""
-	}
-	schema := urlStrArray[0]
-	host := strings.Split(urlStrArray[1], "/")[0]
-	return fmt.Sprintf("%s//%s", schema, host)
+	return fmt.Sprintf("%s//%s", theURL.Scheme, theURL.Host)
 }
 
 // GetBytes returns content as []byte
