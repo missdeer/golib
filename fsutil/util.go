@@ -26,8 +26,17 @@ func FileExists(path string) (bool, error) {
 		}
 		return false, errors.New(path + " exists but is not regular file")
 	}
-	if os.IsNotExist(err) {
-		return false, nil
+	return false, err
+}
+
+// DirExists check if the give directory exists
+func DirExists(path string) (bool, error) {
+	stat, err:= os.Stat(path)
+	if err == nil {
+		if stat.Mode() == os.ModeDir {
+			return true,nil
+		}
+		return false, errors.New(path + " exists but is not regular directory")
 	}
 	return false, err
 }
