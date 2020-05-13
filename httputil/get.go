@@ -48,10 +48,10 @@ func GetPage(url, ua string) (io.Reader, error) {
 func GetHostByURL(u string) (host string) {
 	theURL, e := url.Parse(u)
 	if e != nil {
-		log.Println(e)
+		log.Println(u, e)
 		return
 	}
-	return fmt.Sprintf("%s//%s", theURL.Scheme, theURL.Host)
+	return fmt.Sprintf("%s://%s", theURL.Scheme, theURL.Host)
 }
 
 // GetBytes returns content as []byte
