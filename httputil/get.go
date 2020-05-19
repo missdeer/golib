@@ -63,7 +63,7 @@ func GetBytes(u string, headers http.Header, timeout time.Duration, retryCount i
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		log.Println("Could not parse novel page request:", err)
-		return
+		return nil, err
 	}
 
 	req.Header = headers
@@ -76,7 +76,7 @@ doRequest:
 			time.Sleep(3 * time.Second)
 			goto doRequest
 		}
-		return
+		return nil, err
 	}
 
 	if resp.StatusCode != 200 {
@@ -87,7 +87,7 @@ doRequest:
 			time.Sleep(3 * time.Second)
 			goto doRequest
 		}
-		return
+		return nil, fmt.Errorf("response code: %d, status: %s", resp.StatusCode, resp.Status)
 	}
 
 	c, err = ioutil.ReadAll(resp.Body)
@@ -99,7 +99,7 @@ doRequest:
 			time.Sleep(3 * time.Second)
 			goto doRequest
 		}
-		return
+		return nil, err
 	}
-	return
+	return c, nil
 }
