@@ -12,12 +12,10 @@ import (
 	"time"
 )
 
-const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36"
-
 // GetPage get HTML page by url
 func GetPage(url, ua string) (io.Reader, error) {
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipVerify},
 	}
 	client := &http.Client{Transport: tr, Timeout: 10 * time.Second}
 
@@ -56,8 +54,12 @@ func GetHostByURL(u string) (host string) {
 
 // GetBytes returns content as []byte
 func GetBytes(u string, headers http.Header, timeout time.Duration, retryCount int) (c []byte, err error) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipVerify},
+	}
 	client := &http.Client{
-		Timeout: timeout,
+		Transport: tr,
+		Timeout:   timeout,
 	}
 	retry := 0
 	req, err := http.NewRequest("GET", u, nil)
