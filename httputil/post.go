@@ -2,7 +2,6 @@
 package httputil
 
 import (
-	"crypto/tls"
 	"io"
 	"log"
 	"net/http"
@@ -12,10 +11,7 @@ import (
 
 // PostPage post to page
 func PostPage(url, key string) (io.Reader, error) {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipVerify},
-	}
-	client := &http.Client{Transport: tr, Timeout: 10 * time.Second}
+	client := createHttpClient(10 * time.Second)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(key))
 	if err != nil {

@@ -98,8 +98,9 @@ func (d *dialer) socks5Dial(network, addr string) (net.Conn, error) {
 func socks5ProxyTransport(addr string) *http.Transport {
 	d := &dialer{addr: addr}
 	return &http.Transport{
-		DialContext: d.socks5DialContext,
-		Dial:        d.socks5Dial,
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipVerify},
+		DialContext:     d.socks5DialContext,
+		Dial:            d.socks5Dial,
 	}
 }
 
@@ -147,11 +148,20 @@ func createHttpClient(timeout time.Duration) *http.Client {
 	}
 
 	httpProxy := os.Getenv("HTTP_PROXY")
+	httpsProxy := os.Getenv("HTTPS_PROXY")
 	socks5Proxy := os.Getenv("SOCKS5_PROXY")
-	if httpProxy != "" {
+	allProxy := os.Getenv("ALL_PROXY")
+	if httpProxy != "" || httpsProxy != "" || allProxy != "" {
+		if httpProxy == "" {
+			httpProxy = httpsProxy
+		}
+		if httpProxy == "" {
+			httpProxy = allProxy
+		}
 		if proxyURL, err := url.Parse(httpProxy); err == nil {
 			transport := &http.Transport{
-				Proxy: http.ProxyURL(proxyURL),
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipVerify},
+				Proxy:           http.ProxyURL(proxyURL),
 			}
 			dialer := &net.Dialer{}
 			transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
