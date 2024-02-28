@@ -4,6 +4,7 @@ package httputil
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,7 +15,6 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -47,7 +47,7 @@ func patchAddress(addr string) (string, error) {
 	}
 	// resolve it via http://119.29.29.29/d?dn=api.baidu.com
 	client := getGlobalHttpClient()
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://119.29.29.29/d?dn=%s", host), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://120.53.53.53/dns-query?name=%s", host), nil)
 	if err != nil {
 		log.Println(err)
 		return addr, err
@@ -63,13 +63,33 @@ func patchAddress(addr string) (string, error) {
 		log.Println(err)
 		return addr, err
 	}
-	ips := string(content)
-	ss := strings.Split(ips, ";")
-	if len(ss) == 0 {
+
+	type DoHResponse struct {
+		Status int `json:"Status"`
+		Answer []struct {
+			Data string `json:"data"`
+		} `json:"Answer"`
+	}
+	var dr DoHResponse
+	err = json.Unmarshal(content, &dr)
+	if err != nil {
+		log.Println(err)
 		return addr, err
 	}
-	resolveResult.Store(host, ss)
-	return net.JoinHostPort(ss[0], port), nil
+	if dr.Status != 0 {
+		return addr, fmt.Errorf("DoH response status: %d", dr.Status)
+	}
+
+	if len(dr.Answer) == 0 {
+		return addr, err
+	}
+	// store to cache
+	var ips []string
+	for _, a := range dr.Answer {
+		ips = append(ips, a.Data)
+	}
+	resolveResult.Store(host, ips)
+	return net.JoinHostPort(ips[0], port), nil
 }
 
 type dialer struct {
