@@ -117,36 +117,6 @@ func createHttpClient(timeout time.Duration) *http.Client {
 		Timeout:   timeout,
 	}
 
-	var localAddr net.Addr
-	if localAddr != nil {
-		ip, _, _ := net.ParseCIDR(localAddr.String())
-		if ipaddr, err := net.ResolveIPAddr("ip", ip.String()); err == nil {
-			client.Transport = &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-				DialContext: (&net.Dialer{
-					LocalAddr: &net.TCPAddr{IP: ipaddr.IP},
-					Timeout:   timeout,
-					KeepAlive: 30 * time.Second,
-					DualStack: true,
-				}).DialContext,
-				ForceAttemptHTTP2:     true,
-				MaxIdleConns:          100,
-				IdleConnTimeout:       90 * time.Second,
-				TLSHandshakeTimeout:   10 * time.Second,
-				ExpectContinueTimeout: 1 * time.Second,
-			}
-			net.DefaultResolver = &net.Resolver{
-				PreferGo: true,
-				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-					d := net.Dialer{
-						LocalAddr: &net.UDPAddr{IP: ipaddr.IP},
-					}
-					return d.DialContext(ctx, "udp", "119.29.29.29:53")
-				},
-			}
-		}
-	}
-
 	httpProxy := os.Getenv("HTTP_PROXY")
 	httpsProxy := os.Getenv("HTTPS_PROXY")
 	socks5Proxy := os.Getenv("SOCKS5_PROXY")
