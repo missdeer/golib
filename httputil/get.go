@@ -6,10 +6,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"golang.org/x/net/proxy"
-	"golang.org/x/net/publicsuffix"
 	"io"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net"
@@ -20,6 +17,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/net/proxy"
+	"golang.org/x/net/publicsuffix"
 )
 
 var (
@@ -46,7 +46,7 @@ func patchAddress(addr string) (string, error) {
 		}
 	}
 	// resolve it via http://119.29.29.29/d?dn=api.baidu.com
-	client := GetHttpClient()
+	client := getGlobalHttpClient()
 	req, err := http.NewRequest("GET", fmt.Sprintf("http://119.29.29.29/d?dn=%s", host), nil)
 	if err != nil {
 		log.Println(err)
@@ -58,7 +58,7 @@ func patchAddress(addr string) (string, error) {
 		return addr, err
 	}
 	defer resp.Body.Close()
-	content, err := ioutil.ReadAll(resp.Body)
+	content, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
 		return addr, err
@@ -180,20 +180,21 @@ func createHttpClient(timeout time.Duration) *http.Client {
 	return client
 }
 
-func GetHttpClient() *http.Client {
+func getGlobalHttpClient() *http.Client {
 	once.Do(func() { globalClient = createHttpClient(30 * time.Second) })
 	return globalClient
 }
 
 // GetPage get HTML page by url
 func GetPage(url, ua string) (io.Reader, error) {
-	client := createHttpClient(30 * time.Second)
-
+	client := createHttpClient(10 * time.Second)
+	defer func() {
+		client = nil
+	}()
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Printf("GetPage error:%s\n", err.Error())
 		return nil, err
-
 	}
 
 	if ua == "" {
@@ -225,6 +226,9 @@ func GetHostByURL(u string) (host string) {
 // GetBytes returns content as []byte
 func GetBytes(u string, headers http.Header, timeout time.Duration, retryCount int) (c []byte, err error) {
 	client := createHttpClient(timeout)
+	defer func() {
+		client = nil
+	}()
 	retry := 0
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
@@ -256,7 +260,7 @@ doRequest:
 		return nil, fmt.Errorf("response code: %d, status: %s", resp.StatusCode, resp.Status)
 	}
 
-	c, err = ioutil.ReadAll(resp.Body)
+	c, err = io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
 		log.Println("reading content failed")
