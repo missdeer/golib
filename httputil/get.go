@@ -29,6 +29,10 @@ var (
 	globalClient  *http.Client
 )
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func patchAddress(addr string) (string, error) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -45,9 +49,10 @@ func patchAddress(addr string) (string, error) {
 			return net.JoinHostPort(ips[rand.Intn(len(ips))], port), nil
 		}
 	}
-	// resolve it via http://119.29.29.29/d?dn=api.baidu.com
+	// resolve it via DNSPod DoH
 	client := getGlobalHttpClient()
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://120.53.53.53/dns-query?name=%s", host), nil)
+	dohs := []string{"1.12.12.12", "120.53.53.53"}
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://%s/dns-query?name=%s", dohs[rand.Intn(len(dohs))], host), nil)
 	if err != nil {
 		log.Println(err)
 		return addr, err
