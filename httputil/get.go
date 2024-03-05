@@ -15,6 +15,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,10 +29,6 @@ var (
 	once          = sync.Once{}
 	globalClient  *http.Client
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 func patchAddress(addr string) (string, error) {
 	host, port, err := net.SplitHostPort(addr)
@@ -143,7 +140,13 @@ func createHttpClient(timeout time.Duration) *http.Client {
 	}
 
 	httpProxy := os.Getenv("HTTP_PROXY")
+	if httpProxy != "" && !strings.HasPrefix(httpProxy, "http://") {
+		httpProxy = "http://" + httpProxy
+	}
 	httpsProxy := os.Getenv("HTTPS_PROXY")
+	if httpsProxy != "" && !strings.HasPrefix(httpsProxy, "https://") {
+		httpsProxy = "https://" + httpsProxy
+	}
 	socks5Proxy := os.Getenv("SOCKS5_PROXY")
 	allProxy := os.Getenv("ALL_PROXY")
 	if httpProxy != "" || httpsProxy != "" || allProxy != "" {
@@ -162,10 +165,6 @@ func createHttpClient(timeout time.Duration) *http.Client {
 			transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 				addr, _ = patchAddress(addr)
 				return dialer.DialContext(ctx, network, addr)
-			}
-			transport.Dial = func(network, addr string) (net.Conn, error) {
-				addr, _ = patchAddress(addr)
-				return dialer.Dial(network, addr)
 			}
 			client.Transport = transport
 		}
